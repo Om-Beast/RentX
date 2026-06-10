@@ -1,4 +1,7 @@
-import { createVehicle } from "./vehicle.repository.js";
+import {
+  createVehicle,
+  getAllVehicles,
+} from "./vehicle.repository.js";
 
 export const addVehicleService = async (
   vehicleData,
@@ -9,3 +12,8 @@ export const addVehicleService = async (
     owner: ownerId,
   });
 };
+
+export const getAllVehiclesService =
+  async () => {
+    return await getAllVehicles();
+  };

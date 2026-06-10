@@ -1,4 +1,7 @@
-import { addVehicleService } from "./vehicle.service.js";
+import {
+  addVehicleService,
+  getAllVehiclesService,
+} from "./vehicle.service.js";
 
 export const addVehicle = async (req, res) => {
   try {
@@ -13,6 +16,27 @@ export const addVehicle = async (req, res) => {
     });
   } catch (error) {
     res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const getAllVehicles = async (
+  req,
+  res
+) => {
+  try {
+    const vehicles =
+      await getAllVehiclesService();
+
+    res.status(200).json({
+      success: true,
+      count: vehicles.length,
+      vehicles,
+    });
+  } catch (error) {
+    res.status(500).json({
       success: false,
       message: error.message,
     });

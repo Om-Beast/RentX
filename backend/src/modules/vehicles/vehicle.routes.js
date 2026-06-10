@@ -1,5 +1,9 @@
 import express from "express";
-import { addVehicle } from "./vehicle.controller.js";
+import {
+  addVehicle,
+  getAllVehicles,
+} from "./vehicle.controller.js";
+
 import {
   protect,
   authorize,
@@ -7,6 +11,10 @@ import {
 
 const router = express.Router();
 
+// Customer sab vehicles dekh sakta hai
+router.get("/", getAllVehicles);
+
+// Sirf Fleet Owner/Admin vehicle add kar sakta hai
 router.post(
   "/",
   protect,
