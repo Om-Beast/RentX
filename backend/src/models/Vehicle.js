@@ -1,0 +1,62 @@
+import mongoose from "mongoose";
+
+const vehicleSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+    },
+
+    brand: {
+      type: String,
+      required: true,
+    },
+
+    type: {
+      type: String,
+      enum: ["car", "bike"],
+      required: true,
+    },
+
+    model: {
+      type: String,
+      required: true,
+    },
+
+    year: {
+      type: Number,
+      required: true,
+    },
+
+    rentPerDay: {
+      type: Number,
+      required: true,
+    },
+
+    fuelType: {
+      type: String,
+      enum: ["petrol", "diesel", "electric", "hybrid"],
+    },
+
+    transmission: {
+      type: String,
+      enum: ["manual", "automatic"],
+    },
+
+    images: [String],
+
+    isAvailable: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+const Vehicle =
+  mongoose.models.Vehicle ||
+  mongoose.model("Vehicle", vehicleSchema);
+
+export default Vehicle;
