@@ -5,6 +5,12 @@ import VehicleListing from "../pages/VehicleListing";
 import VehicleDetails from "../pages/VehicleDetails";
 import Checkout from "../pages/Checkout";
 import BookingSuccess from "../pages/BookingSuccess";
+import MyBookings from "../pages/MyBookings";
+import FleetDashboard from "../pages/FleetDashboard";
+import AddVehicle from "../pages/AddVehicle";
+import Login from "../pages/Login";
+import Register from "../pages/Register";
+import ProtectedRoute from "./ProtectedRoute";
 
 function AppRoutes() {
   return (
@@ -24,15 +30,54 @@ function AppRoutes() {
         element={<VehicleDetails />}
       />
 
-      <Route
-        path="/checkout"
-        element={<Checkout />}
-      />
+     <Route
+      path="/checkout"
+      element={
+        <ProtectedRoute>
+          <Checkout />
+        </ProtectedRoute>
+      }
+    />
 
       <Route
         path="/booking-success"
         element={<BookingSuccess />}
       />
+
+      <Route
+    path="/my-bookings"
+    element={
+      <ProtectedRoute>
+        <MyBookings />
+      </ProtectedRoute>
+    }
+  />
+
+      <Route
+      path="/dashboard"
+      element={
+        <ProtectedRoute>
+          <FleetDashboard />
+        </ProtectedRoute>
+      }
+    />
+        <Route
+    path="/login"
+    element={<Login />}
+  />
+
+  <Route
+    path="/register"
+    element={<Register />}
+  />
+    <Route
+    path="/add-vehicle"
+    element={
+      <ProtectedRoute>
+        <AddVehicle />
+      </ProtectedRoute>
+    }
+  />
     </Routes>
   );
 }

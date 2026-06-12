@@ -1,21 +1,37 @@
-import { useState } from "react";
-import vehicles from "../data/vehicles";
+import { useState, useEffect } from "react";
+import axios from "axios";
 import VehicleCard from "../components/VehicleCard";
 
 export default function VehicleListing() {
+  const [vehicles, setVehicles] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
 
   const categories = [
-  "All",
-  "Scooter",
-  "Bike",
-  "Car",
-  "SUV",
-  "Family",
-  "Electric",
-  "Premium",
-];
+    "All",
+    "Bike",
+    "Car",
+  ];
+
+  useEffect(() => {
+    const fetchVehicles = async () => {
+      try {
+        const res = await axios.get(
+          "http://localhost:5000/api/vehicles"
+        );
+
+        console.log("API DATA:", res.data);
+
+        setVehicles(res.data.vehicles);
+      } catch (error) {
+        console.log("API ERROR:", error);
+      }
+    };
+
+    fetchVehicles();
+  }, []);
+
+  console.log("Vehicles:", vehicles);
 
   const filteredVehicles = vehicles.filter((vehicle) => {
     const matchesSearch = vehicle.name
@@ -24,7 +40,8 @@ export default function VehicleListing() {
 
     const matchesCategory =
       selectedCategory === "All" ||
-      vehicle.category === selectedCategory;
+      vehicle.type?.toLowerCase() ===
+        selectedCategory.toLowerCase();
 
     return matchesSearch && matchesCategory;
   });
@@ -39,7 +56,7 @@ export default function VehicleListing() {
           </h1>
 
           <p className="text-slate-600 mt-2">
-            Find scooters, bikes, cars, SUVs and premium rides.
+            Find bikes and cars available for rent.
           </p>
         </div>
       </div>
@@ -50,22 +67,26 @@ export default function VehicleListing() {
           type="text"
           placeholder="Search vehicle..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full p-4 border rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          onChange={(e) =>
+            setSearchTerm(e.target.value)
+          }
+          className="w-full p-4 border rounded-xl text-slate-900"
         />
       </div>
 
-      {/* Category Filters */}
+      {/* Category */}
       <div className="max-w-7xl mx-auto px-4 pb-6">
         <div className="flex flex-wrap gap-3">
           {categories.map((category) => (
             <button
               key={category}
-              onClick={() => setSelectedCategory(category)}
-              className={`px-5 py-2 rounded-full border transition ${
+              onClick={() =>
+                setSelectedCategory(category)
+              }
+              className={`px-5 py-2 rounded-full border ${
                 selectedCategory === category
-                  ? "bg-indigo-600 text-white border-indigo-600"
-                  : "bg-white text-slate-700 border-slate-300 hover:bg-slate-100"
+                  ? "bg-indigo-600 text-white"
+                  : "bg-white text-slate-700"
               }`}
             >
               {category}
@@ -80,7 +101,7 @@ export default function VehicleListing() {
           {filteredVehicles.length > 0 ? (
             filteredVehicles.map((vehicle) => (
               <VehicleCard
-                key={vehicle.id}
+                key={vehicle._id}
                 vehicle={vehicle}
               />
             ))
@@ -89,10 +110,6 @@ export default function VehicleListing() {
               <h3 className="text-xl font-semibold text-gray-700">
                 No vehicles found
               </h3>
-
-              <p className="text-gray-500 mt-2">
-                Try searching with another keyword or category.
-              </p>
             </div>
           )}
         </div>

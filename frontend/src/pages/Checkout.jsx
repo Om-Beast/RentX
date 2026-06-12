@@ -1,4 +1,5 @@
 import { useState } from "react";
+import axios from "axios";
 import {
   useLocation,
   Navigate,
@@ -23,15 +24,17 @@ export default function Checkout() {
     return <Navigate to="/vehicles" replace />;
   }
 
-  const {
-    vehicle,
-    rentalDays,
-    totalPrice,
-    gst,
-    platformFee,
-    securityDeposit,
-    finalAmount,
-  } = bookingData;
+const {
+  vehicle,
+  rentalDays,
+  totalPrice,
+  gst,
+  platformFee,
+  securityDeposit,
+  finalAmount,
+  pickupDate,
+  returnDate,
+} = bookingData;
 
   const [form, setForm] = useState({
     fullName: "",
@@ -51,15 +54,59 @@ export default function Checkout() {
       [name]: value,
     }));
   };
+  const getVehicleImage = () => {
+  const name = vehicle?.name?.toLowerCase() || "";
 
-  const handlePayment = () => {
-  if (loading) return;
+  if (name.includes("activa")) return "/vehicles/activa.png";
+  if (name.includes("classic")) return "/vehicles/Classic-350.png";
+  if (name.includes("thar")) return "/vehicles/thar.png";
+  if (name.includes("nexon")) return "/vehicles/nexon.png";
+  if (name.includes("creta")) return "/vehicles/creta.png";
+  if (name.includes("city")) return "/vehicles/city.png";
+  if (name.includes("scorpio")) return "/vehicles/scorpio.png";
+  if (name.includes("innova")) return "/vehicles/innova.png";
+  if (name.includes("ola")) return "/vehicles/ola.png";
+  if (name.includes("bmw")) return "/vehicles/bmw.png";
 
-  setLoading(true);
+  return "/vehicles/default.png";
+};
 
-  setTimeout(() => {
-    navigate("/booking-success");
-  }, 1000);
+ const handlePayment = async () => {
+  console.log("pickupDate =", pickupDate);
+console.log("returnDate =", returnDate);
+  try {
+    setLoading(true);
+
+ const bookingPayload = {
+  user: "6a28ef02f4c6059ef61efc3a",
+  vehicle: vehicle._id,
+  startDate: pickupDate,
+  endDate: returnDate,
+  totalPrice: finalAmount,
+  bookingStatus: "pending",
+  paymentStatus: "paid",
+};
+
+console.log("BOOKING PAYLOAD");
+console.log(bookingPayload);
+
+    const res = await axios.post(
+      "http://localhost:5000/api/bookings",
+      bookingPayload
+    );
+
+    console.log(res.data);
+
+    if (res.data.success) {
+      navigate("/booking-success");
+    }
+
+  } catch (error) {
+    console.log(error.response?.data);
+    alert(error.response?.data?.message);
+  } finally {
+    setLoading(false);
+  }
 };
 
   return (
@@ -166,15 +213,31 @@ export default function Checkout() {
 
           <div className="flex gap-4 mb-6">
             <img
-              src={vehicle.image}
+               src={getVehicleImage()}
               alt={vehicle.name}
               className="w-28 h-28 rounded-xl object-cover border"
             />
 
             <div>
-              <h3 className="font-bold text-xl">
-                {vehicle.name}
-              </h3>
+              <h3 className="font-bold text-xl text-slate-900">
+  {vehicle.name}
+      </h3>
+
+      <p className="text-sm text-gray-500">
+        {vehicle.brand} • {vehicle.model}
+      </p>
+
+              <p className="text-gray-600 mt-1">
+                {vehicle.brand}
+              </p>
+
+              <p className="text-gray-500">
+                {vehicle.fuelType} • {vehicle.transmission}
+              </p>
+
+              <p className="text-green-600 font-medium">
+                Available Now
+              </p>
 
               <p className="text-gray-500 flex items-center gap-2 mt-2">
                 <Calendar size={16} />
@@ -182,7 +245,7 @@ export default function Checkout() {
               </p>
 
               <p className="text-indigo-600 font-semibold mt-2">
-                ₹{vehicle.pricePerDay}/day
+                ₹{vehicle.rentPerDay}/day
               </p>
             </div>
           </div>
@@ -232,4 +295,3 @@ export default function Checkout() {
     </motion.section>
   );
 }
-

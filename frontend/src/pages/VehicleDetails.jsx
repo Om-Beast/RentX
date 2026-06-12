@@ -1,21 +1,54 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 import {
   useParams,
   Link,
   useNavigate,
 } from "react-router-dom";
-import vehicles from "../data/vehicles";
 
 export default function VehicleDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const vehicle = vehicles.find(
-    (v) => v.id === Number(id)
-  );
+  const [vehicle, setVehicle] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const [pickupDate, setPickupDate] = useState("");
   const [returnDate, setReturnDate] = useState("");
+
+  useEffect(() => {
+    const fetchVehicle = async () => {
+      try {
+        const res = await axios.get(
+          `http://localhost:5000/api/vehicles/${id}`
+        );
+
+        setVehicle(res.data.vehicle);
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVehicle();
+  }, [id]);
+
+  const getVehicleImage = () => {
+    const name = vehicle?.name?.toLowerCase() || "";
+
+    if (name.includes("activa")) return "/vehicles/activa.png";
+    if (name.includes("classic")) return "/vehicles/Classic-350.png";
+    if (name.includes("thar")) return "/vehicles/thar.png";
+    if (name.includes("nexon")) return "/vehicles/nexon.png";
+    if (name.includes("creta")) return "/vehicles/creta.png";
+    if (name.includes("city")) return "/vehicles/city.png";
+    if (name.includes("scorpio")) return "/vehicles/scorpio.png";
+    if (name.includes("innova")) return "/vehicles/innova.png";
+    if (name.includes("ola")) return "/vehicles/ola.png";
+
+    return "/vehicles/activa.png";
+  };
 
   const today = new Date();
   today.setMinutes(
@@ -44,20 +77,30 @@ export default function VehicleDetails() {
 
   const totalPrice =
     rentalDays *
-    (vehicle?.pricePerDay || 0);
-    const gst = Math.round(totalPrice * 0.18);
+    (vehicle?.rentPerDay || 0);
 
-const platformFee =
-  vehicle.platformFee || 99;
+  const gst = Math.round(
+    totalPrice * 0.18
+  );
 
-const securityDeposit =
-  vehicle.securityDeposit || 1000;
+  const platformFee = 99;
+  const securityDeposit = 1000;
 
-const finalAmount =
-  totalPrice +
-  gst +
-  platformFee +
-  securityDeposit;
+  const finalAmount =
+    rentalDays > 0
+      ? totalPrice +
+        gst +
+        platformFee +
+        securityDeposit
+      : 0;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-2xl font-bold">
+        Loading...
+      </div>
+    );
+  }
 
   if (!vehicle) {
     return (
@@ -72,7 +115,6 @@ const finalAmount =
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="max-w-7xl mx-auto px-4 py-10">
-        {/* Back Button */}
         <Link
           to="/vehicles"
           className="text-indigo-600 font-medium hover:underline"
@@ -84,7 +126,7 @@ const finalAmount =
           {/* IMAGE */}
           <div>
             <img
-              src={vehicle.image}
+              src={getVehicleImage()}
               alt={vehicle.name}
               className="w-full h-[450px] object-cover rounded-3xl shadow-lg"
             />
@@ -100,46 +142,17 @@ const finalAmount =
               {vehicle.name}
             </h1>
 
-            <p className="text-slate-500 mt-2">
-              {vehicle.category}
+            <p className="text-slate-500 mt-2 capitalize">
+              {vehicle.type}
             </p>
-            <div className="flex flex-wrap gap-2 mt-3">
-
-            <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-medium">
-                Insurance Included
-            </span>
-
-            <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-medium">
-                Free Delivery
-            </span>
-
-            {vehicle.category === "Premium" && (
-                <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs font-medium">
-                Premium Vehicle
-                </span>
-            )}
-
-            </div>
-
-
-            <div className="flex items-center gap-2 mt-4">
-              <span className="text-yellow-500">
-                ⭐
-              </span>
-
-              <span className="font-medium">
-                {vehicle.rating}
-              </span>
-            </div>
 
             <div className="mt-6">
               <span className="text-4xl font-bold text-indigo-600">
-                ₹{vehicle.pricePerDay}
+                ₹{vehicle.rentPerDay}
               </span>
 
               <span className="text-slate-500 text-lg">
-                {" "}
-                / day
+                {" "} / day
               </span>
             </div>
 
@@ -149,8 +162,8 @@ const finalAmount =
                 <p className="text-slate-500 text-sm">
                   Fuel
                 </p>
-                <p className="font-semibold text-slate-900">
-                  {vehicle.fuel}
+                <p className="font-semibold text-black">
+                  {vehicle.fuelType || "N/A"}
                 </p>
               </div>
 
@@ -158,197 +171,126 @@ const finalAmount =
                 <p className="text-slate-500 text-sm">
                   Transmission
                 </p>
-                <p className="font-semibold text-slate-900">
-                  {vehicle.transmission}
+                <p className="font-semibold text-black">
+                  {vehicle.transmission || "N/A"}
                 </p>
               </div>
 
               <div className="bg-white p-4 rounded-xl shadow-sm">
                 <p className="text-slate-500 text-sm">
-                  Seats
+                  Brand
                 </p>
-                <p className="font-semibold text-slate-900">
-                  {vehicle.seats}
+                <p className="font-semibold text-black">
+                  {vehicle.brand || "N/A"}
                 </p>
               </div>
 
               <div className="bg-white p-4 rounded-xl shadow-sm">
                 <p className="text-slate-500 text-sm">
-                  Category
+                  Year
                 </p>
-                <p className="font-semibold text-slate-900">
-                  {vehicle.category}
+                <p className="font-semibold text-black">
+                  {vehicle.year || "N/A"}
                 </p>
               </div>
             </div>
 
-            {/* RENTAL CALCULATOR */}
+            {/* DATE SECTION */}
             <div className="mt-8 bg-white p-5 rounded-2xl shadow-sm">
               <h3 className="font-semibold text-lg mb-4">
                 Select Rental Dates
               </h3>
 
               <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm text-slate-600 mb-2">
-                    Pickup Date
-                  </label>
+                <input
+                  type="date"
+                  min={minDate}
+                  value={pickupDate}
+                  onChange={(e) =>
+                    setPickupDate(e.target.value)
+                  }
+                  className="w-full border border-gray-300 p-3 rounded-lg bg-white text-black"
+                />
 
-                  <input
-                    type="date"
-                    value={pickupDate}
-                    min={minDate}
-                    onChange={(e) =>
-                      setPickupDate(
-                        e.target.value
-                      )
-                    }
-                    className="w-full border rounded-lg p-3 bg-white text-slate-900"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm text-slate-600 mb-2">
-                    Return Date
-                  </label>
-
-                  <input
-                    type="date"
-                    value={returnDate}
-                    min={
-                      pickupDate ||
-                      minDate
-                    }
-                    onChange={(e) =>
-                      setReturnDate(
-                        e.target.value
-                      )
-                    }
-                    className="w-full border rounded-lg p-3 bg-white text-slate-900"
-                  />
-                </div>
+                <input
+                  type="date"
+                  min={pickupDate || minDate}
+                  value={returnDate}
+                  onChange={(e) =>
+                    setReturnDate(e.target.value)
+                  }
+                  className="w-full border border-gray-300 p-3 rounded-lg bg-white text-black"
+                />
               </div>
 
-              <div className="mt-4 border-t pt-4">
-                {pickupDate &&
-                returnDate ? (
-                  <>
-                    <p className="text-slate-600">
-                      Rental Days:
-                      <span className="font-semibold ml-2">
-                        {rentalDays}
-                      </span>
-                    </p>
+              <div className="mt-3 text-sm text-indigo-600">
+                Pickup: {pickupDate || "Not Selected"}
+              </div>
 
-                    <p className="text-slate-600 mt-2">
-                      Pickup:
-                      <span className="font-medium ml-2">
-                        {pickupDate}
-                      </span>
-                    </p>
+              <div className="text-sm text-indigo-600">
+                Return: {returnDate || "Not Selected"}
+              </div>
 
-                    <p className="text-slate-600 mt-2">
-                      Return:
-                      <span className="font-medium ml-2">
-                        {returnDate}
-                      </span>
-                    </p>
-
-                   <div className="mt-4 space-y-2">
-
+              <div className="mt-5 space-y-2">
                 <div className="flex justify-between">
-                    <span>Rent Amount</span>
-                    <span>₹{totalPrice}</span>
+                  <span>Rental Days</span>
+                  <span>{rentalDays}</span>
                 </div>
 
                 <div className="flex justify-between">
-                    <span>GST (18%)</span>
-                    <span>₹{gst}</span>
+                  <span>Rent Amount</span>
+                  <span>₹{totalPrice}</span>
                 </div>
 
                 <div className="flex justify-between">
-                    <span>Platform Fee</span>
-                    <span>₹{platformFee}</span>
+                  <span>GST (18%)</span>
+                  <span>₹{gst}</span>
                 </div>
 
                 <div className="flex justify-between">
-                    <span>Security Deposit</span>
-                    <span>₹{securityDeposit}</span>
+                  <span>Platform Fee</span>
+                  <span>₹{platformFee}</span>
+                </div>
+
+                <div className="flex justify-between">
+                  <span>Security Deposit</span>
+                  <span>₹{securityDeposit}</span>
                 </div>
 
                 <hr />
 
                 <div className="flex justify-between text-2xl font-bold text-indigo-600">
-                    <span>Total Payable</span>
-                    <span>₹{finalAmount}</span>
+                  <span>Total</span>
+                  <span>₹{finalAmount}</span>
                 </div>
-
-                </div>
-                  </>
-                ) : (
-                  <p className="text-slate-500">
-                    Select pickup and
-                    return date to see
-                    total rent.
-                  </p>
-                )}
               </div>
             </div>
 
-            {/* BOOK BUTTON */}
             <button
-                onClick={() =>
-                    navigate("/checkout", {
-                        state: {
-                        vehicle,
-                        rentalDays,
-                        totalPrice,
-                        gst,
-                        platformFee,
-                        securityDeposit,
-                        finalAmount,
-                        },
-                    })
-                    }
-                className="w-full mt-8 bg-indigo-600 text-white py-4 rounded-xl font-semibold hover:bg-indigo-700 transition"
-                >
-                Book Now
-                </button>
-
-            {/* OWNER CARD */}
-            <div className="bg-white mt-8 p-5 rounded-2xl shadow-sm border">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-lg">
-                  Vehicle Owner
-                </h3>
-
-                {vehicle.verified && (
-                  <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">
-                    Verified ✓
-                  </span>
-                )}
-              </div>
-
-              <p className="mt-3 font-medium">
-                {vehicle.owner ||
-                  "RentX Partner"}
-              </p>
-
-              <p className="text-slate-500 text-sm">
-                {vehicle.city ||
-                  "Jabalpur"}
-              </p>
-
-              <div className="mt-4 pt-4 border-t">
-                <p className="text-slate-600">
-                  Total Rentals:
-                  <span className="font-semibold ml-2">
-                    {vehicle.bookings ||
-                      100}
-                  </span>
-                </p>
-              </div>
-            </div>
+              disabled={rentalDays <= 0}
+          onClick={() =>
+        navigate("/checkout", {
+          state: {
+            vehicle,
+            rentalDays,
+            totalPrice,
+            gst,
+            platformFee,
+            securityDeposit,
+            finalAmount,
+            pickupDate,
+            returnDate,
+          },
+        })
+      }
+              className={`w-full mt-8 py-4 rounded-xl font-semibold transition ${
+                rentalDays > 0
+                  ? "bg-indigo-600 text-white hover:bg-indigo-700"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+              }`}
+            >
+              Book Now
+            </button>
           </div>
         </div>
       </div>

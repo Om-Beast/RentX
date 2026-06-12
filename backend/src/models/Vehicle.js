@@ -44,6 +44,11 @@ const vehicleSchema = new mongoose.Schema(
     },
 
     images: [String],
+    owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
 
     isAvailable: {
       type: Boolean,

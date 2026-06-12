@@ -66,8 +66,7 @@ const vehicles = [
     transmission: "Manual",
     seats: 2,
     rating: 4.9,
-    image:
-      "https://images.unsplash.com/photo-1609630875171-b1321377ee65",
+    image: "/vehicles/Classic-350.png",
   },
 
   {

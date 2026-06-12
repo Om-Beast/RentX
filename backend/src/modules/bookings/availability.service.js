@@ -5,25 +5,27 @@ export const isVehicleAvailable = async (
   startDate,
   endDate
 ) => {
+
+  console.log("Vehicle:", vehicleId);
+  console.log("Start:", startDate);
+  console.log("End:", endDate);
+  
+
   const conflictingBooking =
     await Booking.findOne({
       vehicle: vehicleId,
-
       bookingStatus: {
-        $in: [
-          "pending",
-          "confirmed"
-        ]
+        $in: ["pending", "confirmed"],
       },
-
       startDate: {
-        $lte: endDate
+        $lte: endDate,
       },
-
       endDate: {
-        $gte: startDate
-      }
+        $gte: startDate,
+      },
     });
+
+  console.log("CONFLICT:", conflictingBooking);
 
   return !conflictingBooking;
 };
