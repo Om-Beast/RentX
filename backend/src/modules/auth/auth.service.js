@@ -43,13 +43,17 @@ export const loginUserService = async ({
   }
 
   const isMatch = await bcrypt.compare(
-    password,
-    user.password
-  );
+  password,
+  user.password
+);
 
-  if (!isMatch) {
-    throw new Error("Invalid credentials");
-  }
+console.log("PASSWORD ENTERED =", password);
+console.log("HASH IN DB =", user.password);
+console.log("MATCH =", isMatch);
+
+if (!isMatch) {
+  throw new Error("Invalid credentials");
+}
 
   const token = generateToken(user._id);
 

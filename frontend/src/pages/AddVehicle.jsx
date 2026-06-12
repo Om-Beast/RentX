@@ -11,6 +11,9 @@ export default function AddVehicle() {
     rentPerDay: "",
     fuelType: "petrol",
     transmission: "manual",
+    location: "",
+    seats: "",
+    description: "",
   });
 
   const handleChange = (e) => {
@@ -25,8 +28,6 @@ export default function AddVehicle() {
 
     try {
       const token = localStorage.getItem("token");
-
-      console.log("TOKEN:", token);
 
       const res = await axios.post(
         "http://localhost:5000/api/vehicles",
@@ -51,10 +52,12 @@ export default function AddVehicle() {
         rentPerDay: "",
         fuelType: "petrol",
         transmission: "manual",
+        location: "",
+        seats: "",
+        description: "",
       });
     } catch (error) {
       console.log(error);
-      console.log(error.response);
 
       alert(
         error.response?.data?.message ||
@@ -190,6 +193,49 @@ export default function AddVehicle() {
               <option value="manual">Manual</option>
               <option value="automatic">Automatic</option>
             </select>
+          </div>
+
+          <div>
+            <label className="block mb-2 font-semibold text-black">
+              Location
+            </label>
+            <input
+              type="text"
+              name="location"
+              value={formData.location}
+              onChange={handleChange}
+              className="w-full border p-3 rounded-lg text-black"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block mb-2 font-semibold text-black">
+              Seats
+            </label>
+            <input
+              type="number"
+              name="seats"
+              value={formData.seats}
+              onChange={handleChange}
+              className="w-full border p-3 rounded-lg text-black"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block mb-2 font-semibold text-black">
+              Description
+            </label>
+
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              rows="4"
+              className="w-full border p-3 rounded-lg text-black"
+              required
+            />
           </div>
 
           <button

@@ -43,6 +43,31 @@ const vehicleSchema = new mongoose.Schema(
       enum: ["manual", "automatic"],
     },
 
+    description: {
+  type: String,
+  required: true,
+  },
+
+  location: {
+    type: String,
+    required: true,
+  },
+
+  seats: {
+    type: Number,
+    required: true,
+  },
+
+  rating: {
+    type: Number,
+    default: 0,
+  },
+
+  totalReviews: {
+    type: Number,
+    default: 0,
+  },
+
     images: [String],
     owner: {
     type: mongoose.Schema.Types.ObjectId,
