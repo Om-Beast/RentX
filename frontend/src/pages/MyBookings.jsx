@@ -47,9 +47,17 @@ export default function MyBookings() {
 
   const fetchBookings = async () => {
     try {
-      const res = await axios.get(
-        "http://localhost:5000/api/bookings?customerId=6a28ef02f4c6059ef61efc3a"
-      );
+     const token =
+  localStorage.getItem("token");
+
+const res = await axios.get(
+  "http://localhost:5000/api/bookings/my-bookings",
+  {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  }
+);
 
       setBookings(res.data.bookings);
     } catch (error) {
@@ -63,20 +71,29 @@ export default function MyBookings() {
     bookingId
   ) => {
     try {
-      await axios.patch(
-        `http://localhost:5000/api/bookings/${bookingId}/cancel`
-      );
+        const token =
+      localStorage.getItem("token");
+
+    await axios.patch(
+      `http://localhost:5000/api/bookings/${bookingId}/cancel`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
 
       setBookings((prev) =>
-        prev.map((booking) =>
-          booking._id === bookingId
-            ? {
-                ...booking,
-                bookingStatus: "cancelled",
-              }
-            : booking
-        )
-      );
+    prev.map((booking) =>
+      booking._id === bookingId
+        ? {
+            ...booking,
+            bookingStatus: "cancelled",
+          }
+        : booking
+    )
+  );
     } catch (error) {
       console.log(error);
       alert(
@@ -152,17 +169,17 @@ export default function MyBookings() {
 
                 <span
                   className={`px-4 py-2 rounded-full text-white font-medium ${
-                    booking.bookingStatus ===
-                    "cancelled"
+                    booking.bookingStatus  ===
+                    "CANCELLED"
                       ? "bg-red-500"
-                      : booking.bookingStatus ===
-                        "confirmed"
+                      : booking.bookingStatus  ===
+                        "CONFIRMED"
                       ? "bg-green-500"
                       : "bg-yellow-500"
                   }`}
                 >
                   {
-                    booking.bookingStatus
+                    booking.bookingStatus 
                   }
                 </span>
               </div>
@@ -211,7 +228,7 @@ export default function MyBookings() {
 
                   <p className="font-medium">
                     {new Date(
-                      booking.endDate
+                     booking.endDate
                     ).toLocaleDateString()}
                   </p>
                 </div>
@@ -247,8 +264,8 @@ export default function MyBookings() {
               )}
 
               {/* Cancel Button */}
-              {booking.bookingStatus !==
-                "cancelled" && (
+              {booking.bookingStatus  !==
+                "CANCELLED" && (
                 <button
                   onClick={() =>
                     handleCancelBooking(

@@ -96,3 +96,140 @@ export const getMyVehicles = async (
     });
   }
 };
+export const deleteVehicle = async (
+  req,
+  res
+  ) => {
+  try {
+    const vehicle =
+      await Vehicle.findById(
+        req.params.id
+      );
+
+    if (!vehicle) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Vehicle not found",
+      });
+    }
+    if (
+      vehicle.owner.toString() !==
+      req.user._id.toString()
+    ) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "You can delete only your own vehicles",
+      });
+    }
+    await Vehicle.findByIdAndDelete(
+      req.params.id
+    );
+
+    res.status(200).json({
+      success: true,
+      message:
+        "Vehicle deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+export const toggleVehicleAvailability =
+  async (req, res) => {
+    try {
+      const vehicle =
+        await Vehicle.findById(
+          req.params.id
+        );
+
+      if (!vehicle) {
+        return res.status(404).json({
+          success: false,
+          message:
+            "Vehicle not found",
+        });
+      }
+
+      if (
+        vehicle.owner.toString() !==
+        req.user._id.toString()
+      ) {
+        return res.status(403).json({
+          success: false,
+          message:
+            "You can update only your own vehicles",
+        });
+      }
+
+      vehicle.isAvailable =
+        !vehicle.isAvailable;
+
+      await vehicle.save();
+
+      res.status(200).json({
+        success: true,
+        isAvailable:
+          vehicle.isAvailable,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  };
+  export const updateVehicle = async (
+  req,
+  res
+) => {
+  try {
+    const vehicle =
+      await Vehicle.findById(
+        req.params.id
+      );
+
+    if (!vehicle) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Vehicle not found",
+      });
+    }
+
+    if (
+      vehicle.owner.toString() !==
+      req.user._id.toString()
+    ) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "You can update only your own vehicles",
+      });
+    }
+
+    const updatedVehicle =
+      await Vehicle.findByIdAndUpdate(
+        req.params.id,
+        req.body,
+        {
+          new: true,
+          runValidators: true,
+        }
+      );
+
+    res.status(200).json({
+      success: true,
+      vehicle: updatedVehicle,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

@@ -1,103 +1,266 @@
 import Booking from "../../models/Booking.js";
 import Vehicle from "../../models/Vehicle.js";
 
-import {
-  createBooking,
-  getBookingsByCustomer,
-} from "./booking.repository.js";
-
-import { isVehicleAvailable } from "./availability.service.js";
-
 export const createBookingService = async (
-  bookingData
+  bookingData,
+  customerId
 ) => {
-  const {
-    vehicle,
-    startDate,
-    endDate,
-  } = bookingData;
+ const {
+  vehicleId,
+  pickupDate,
+  returnDate,
+} = bookingData;
 
-  // Date Validation
-  if (
-    new Date(startDate) >=
-    new Date(endDate)
-  ) {
+  const vehicle = await Vehicle.findById(
+    vehicleId
+  );
+
+  if (!vehicle) {
+    throw new Error("Vehicle not found");
+  }
+
+  if (!vehicle.isAvailable) {
     throw new Error(
-      "End date must be after start date"
+      "Vehicle is not available"
     );
   }
 
-  // Availability Check
-  const available =
-    await isVehicleAvailable(
-      vehicle,
-      startDate,
-      endDate
-    );
+  const overlappingBooking =
+  await Booking.findOne({
+    vehicle: vehicleId,
 
-  if (!available) {
+    bookingStatus: {
+      $in: ["pending", "confirmed"],
+    },
+
+    startDate: {
+      $lt: new Date(returnDate),
+    },
+
+    endDate: {
+      $gt: new Date(pickupDate),
+    },
+  });
+
+  if (overlappingBooking) {
     throw new Error(
       "Vehicle already booked for selected dates"
     );
   }
 
-  // Vehicle Fetch
-  const vehicleDoc =
-    await Vehicle.findById(vehicle);
-
-  if (!vehicleDoc) {
-    throw new Error(
-      "Vehicle not found"
-    );
-  }
-
-  // Total Price Calculation
-  const days = Math.ceil(
-    (new Date(endDate) -
-      new Date(startDate)) /
+  const rentalDays = Math.ceil(
+    (new Date(returnDate) -
+      new Date(pickupDate)) /
       (1000 * 60 * 60 * 24)
   );
+  const totalPrice =
+  rentalDays * vehicle.rentPerDay;
 
-  bookingData.totalPrice =
-    days * vehicleDoc.rentPerDay;
+const gst = Math.round(
+  totalPrice * 0.18
+);
 
-  return await createBooking(
-    bookingData
-  );
+const platformFee = 99;
+
+const securityDeposit = 1000;
+
+
+  const finalAmount =
+    totalPrice +
+    gst +
+    platformFee +
+    securityDeposit;
+
+  const booking = await Booking.create({
+  user: customerId,
+
+  vehicle: vehicleId,
+
+  startDate: pickupDate,
+
+  endDate: returnDate,
+
+ totalPrice: finalAmount,
+
+  bookingStatus: "pending",
+});
+
+  return booking;
 };
 
-export const getBookingsService = async (
-  customerId
-) => {
-  return await getBookingsByCustomer(
-    customerId
-  );
-};
+export const getMyBookingsService =
+  async (customerId) => {
+    return await Booking.find({
+  user: customerId,
+})
+      .populate("vehicle")
+      .sort({
+        createdAt: -1,
+      });
+  };
 
-export const cancelBookingService = async (
-  bookingId
-) => {
-  return await Booking.findByIdAndUpdate(
+export const getOwnerBookingsService =
+  async (ownerId) => {
+    const vehicles =
+      await Vehicle.find({
+        owner: ownerId,
+      }).select("_id");
+
+    const vehicleIds =
+      vehicles.map(
+        (vehicle) => vehicle._id
+      );
+
+    return await Booking.find({
+      vehicle: {
+        $in: vehicleIds,
+      },
+    })
+      .populate("vehicle")
+      .populate("user", "name email")
+      .sort({
+        createdAt: -1,
+      });
+  };
+
+export const cancelBookingService =
+  async (
     bookingId,
-    {
-      bookingStatus: "cancelled",
-    },
-    {
-      new: true,
-    }
-  );
-};
+    userId,
+    role
+  ) => {
+    const booking =
+      await Booking.findById(
+        bookingId
+      );
 
-export const confirmBookingService = async (
-  bookingId
-) => {
-  return await Booking.findByIdAndUpdate(
-    bookingId,
-    {
-      bookingStatus: "confirmed",
-    },
-    {
-      new: true,
+    if (!booking) {
+      throw new Error(
+        "Booking not found"
+      );
     }
-  );
-};
+
+    const isOwner =
+      booking.customer.toString() ===
+      userId.toString();
+
+    if (
+      role !== "ADMIN" &&
+      !isOwner
+    ) {
+      throw new Error(
+        "Not authorized"
+      );
+    }
+
+    if (
+      booking.bookingStatus ===
+      "cancelled"
+    ) {
+      throw new Error(
+        "Booking already cancelled"
+      );
+    }
+
+    booking.bookingStatus =
+      "cancelled";
+
+    await booking.save();
+
+    return booking;
+  };
+  export const confirmBookingService =
+  async (
+    bookingId,
+    requesterId,
+    requesterRole
+  ) => {
+    const booking =
+      await Booking.findById(
+        bookingId
+      ).populate("vehicle");
+
+    if (!booking) {
+      throw new Error(
+        "Booking not found"
+      );
+    }
+
+    if (
+      booking.bookingStatus !==
+      "pending"
+    ) {
+      throw new Error(
+        "Only pending bookings can be confirmed"
+      );
+    }
+
+    const isOwner =
+      booking.vehicle.owner.toString() ===
+      requesterId.toString();
+
+    if (
+      requesterRole !==
+        "ADMIN" &&
+      !isOwner
+    ) {
+      throw new Error(
+        "Not authorized"
+      );
+    }
+
+    booking.bookingStatus =
+      "confirmed";
+
+    await booking.save();
+
+    return booking;
+  };
+
+export const rejectBookingService =
+  async (
+    bookingId,
+    requesterId,
+    requesterRole
+  ) => {
+    const booking =
+      await Booking.findById(
+        bookingId
+      ).populate("vehicle");
+
+    if (!booking) {
+      throw new Error(
+        "Booking not found"
+      );
+    }
+
+    if (
+      booking.bookingStatus !==
+      "pending"
+    ) {
+      throw new Error(
+        "Only pending bookings can be rejected"
+      );
+    }
+
+    const isOwner =
+      booking.vehicle.owner.toString() ===
+      requesterId.toString();
+
+    if (
+      requesterRole !==
+        "ADMIN" &&
+      !isOwner
+    ) {
+      throw new Error(
+        "Not authorized"
+      );
+    }
+
+    booking.bookingStatus =
+      "cancelled";
+
+    await booking.save();
+
+    return booking;
+  };

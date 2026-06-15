@@ -4,6 +4,9 @@ import {
   getAllVehicles,
   getVehicleById,
   getMyVehicles,
+  deleteVehicle,
+  toggleVehicleAvailability,
+  updateVehicle,
 } from "./vehicle.controller.js";
 
 import {
@@ -45,6 +48,26 @@ router.post(
   protect,
   authorize("FLEET_OWNER", "ADMIN"),
   addVehicle
+);
+router.delete(
+  "/:id",
+  protect,
+  authorize("FLEET_OWNER"),
+  deleteVehicle
+);
+
+router.put(
+  "/:id",
+  protect,
+  authorize("FLEET_OWNER", "ADMIN"),
+  updateVehicle
+);
+
+router.patch(
+  "/:id/toggle-availability",
+  protect,
+  authorize("FLEET_OWNER", "ADMIN"),
+  toggleVehicleAvailability
 );
 
 export default router;

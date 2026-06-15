@@ -11,6 +11,9 @@ import AddVehicle from "../pages/AddVehicle";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
 import ProtectedRoute from "./ProtectedRoute";
+import MyVehicles from "../pages/MyVehicles";
+import EditVehicle from "../pages/EditVehicle";
+import FleetBookingRequests from "../pages/FleetBookingRequests";
 
 function AppRoutes() {
   return (
@@ -30,6 +33,15 @@ function AppRoutes() {
         element={<VehicleDetails />}
       />
 
+      <Route
+      path="/owner-bookings"
+      element={
+        <ProtectedRoute>
+          <FleetBookingRequests />
+        </ProtectedRoute>
+      }
+    />
+
      <Route
       path="/checkout"
       element={
@@ -40,9 +52,9 @@ function AppRoutes() {
     />
 
       <Route
-        path="/booking-success"
-        element={<BookingSuccess />}
-      />
+      path="/booking-success/:id"
+      element={<BookingSuccess />}
+    />
 
       <Route
     path="/my-bookings"
@@ -71,13 +83,30 @@ function AppRoutes() {
     element={<Register />}
   />
     <Route
-    path="/add-vehicle"
-    element={
-      <ProtectedRoute>
-        <AddVehicle />
-      </ProtectedRoute>
-    }
-  />
+  path="/add-vehicle"
+  element={
+    <ProtectedRoute>
+      <AddVehicle />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/my-vehicles"
+  element={
+    <ProtectedRoute>
+      <MyVehicles />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/edit-vehicle/:id"
+  element={
+    <ProtectedRoute>
+      <EditVehicle />
+    </ProtectedRoute>
+  }
+/>
     </Routes>
   );
 }

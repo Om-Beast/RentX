@@ -2,8 +2,13 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 
 export const protect = async (req, res, next) => {
+  console.log(
+  "PAYMENT AUTH HEADER =",
+  req.headers.authorization
+);
   try {
     const authHeader = req.headers.authorization;
+    console.log("AUTH HEADER =", req.headers.authorization);
 
     if (
       !authHeader ||

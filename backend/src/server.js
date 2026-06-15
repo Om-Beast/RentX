@@ -8,13 +8,16 @@ import authRoutes from "./modules/auth/auth.routes.js";
 import vehicleRoutes from "./modules/vehicles/vehicle.routes.js";
 import bookingRoutes from "./modules/bookings/booking.routes.js";
 import dashboardRoutes from "./modules/dashboard/dashboard.routes.js";
+import paymentRoutes from "./modules/payment/payment.routes.js";
 
 dotenv.config();
 
-connectDB();
+// Database Connect
+await connectDB();
 
 const app = express();
 
+// Middleware
 app.use(
   cors({
     origin: "*",
@@ -22,21 +25,26 @@ app.use(
     allowedHeaders: [
       "Content-Type",
       "Authorization",
+      "x-idempotency-key",
     ],
   })
 );
 
 app.use(express.json());
 
+// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/vehicles", vehicleRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/payments", paymentRoutes);
 
+// Health Check
 app.get("/", (req, res) => {
   res.send("RentX Backend Running 🚀");
 });
 
+// Server Start
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {

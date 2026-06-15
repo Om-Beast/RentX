@@ -1,11 +1,14 @@
 import { useState } from "react";
-import axios from "axios";
+
+
 import {
   useLocation,
   Navigate,
-  useNavigate,
+ 
 } from "react-router-dom";
+
 import { motion } from "framer-motion";
+
 import {
   User,
   Mail,
@@ -15,9 +18,10 @@ import {
   Calendar,
 } from "lucide-react";
 
+import { useCheckoutFlow } from "../hooks/useCheckoutFlow";
+
 export default function Checkout() {
   const location = useLocation();
-  const navigate = useNavigate();
   const bookingData = location.state;
 
   if (!bookingData) {
@@ -44,16 +48,24 @@ const {
     pickup: "",
   });
 
-  const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
 
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+const {
+  handleCheckout,
+  checkoutState,
+  error,
+  isProcessing,
+} = useCheckoutFlow();
+
+ const handleChange = (e) => {
+  console.log("NAME =", e.target.name);
+  console.log("VALUE =", e.target.value);
+
+  setForm({
+    ...form,
+    [e.target.name]: e.target.value,
+  });
+};
   const getVehicleImage = () => {
   const name = vehicle?.name?.toLowerCase() || "";
 
@@ -70,45 +82,54 @@ const {
 
   return "/vehicles/default.png";
 };
+// const handlePayment = async () => {
+//   console.log("pickupDate =", pickupDate);
+//     console.log("returnDate =", returnDate);
+//       try {
+//         setLoading(true);
 
- const handlePayment = async () => {
-  console.log("pickupDate =", pickupDate);
-console.log("returnDate =", returnDate);
-  try {
-    setLoading(true);
+//   const bookingPayload = {
+//       vehicleId: vehicle._id,
+//       pickupDate,
+//       returnDate,
+//       };
 
- const bookingPayload = {
-  user: "6a28ef02f4c6059ef61efc3a",
-  vehicle: vehicle._id,
-  startDate: pickupDate,
-  endDate: returnDate,
-  totalPrice: finalAmount,
-  bookingStatus: "pending",
-  paymentStatus: "paid",
+//  console.log("BOOKING PAYLOAD");
+//  console.log(bookingPayload);
+
+//    const token =
+//   localStorage.getItem("token");
+
+//     const res = await axios.post(
+//       "http://localhost:5000/api/bookings",
+//       bookingPayload,
+//       {
+//         headers: {
+//           Authorization: `Bearer ${token}`,
+//         },
+//       }
+//     );
+
+//     console.log(res.data);
+
+//     if (res.data.success) {
+//       navigate("/booking-success");
+//     }
+
+//   } catch (error) {
+//     console.log(error.response?.data);
+//     alert(error.response?.data?.message);
+//   } finally {
+//     setLoading(false);
+//   }
+// };
+const handlePayment = async () => {
+  await handleCheckout({
+    vehicleId: vehicle._id,
+    pickupDate,
+    returnDate,
+  });
 };
-
-console.log("BOOKING PAYLOAD");
-console.log(bookingPayload);
-
-    const res = await axios.post(
-      "http://localhost:5000/api/bookings",
-      bookingPayload
-    );
-
-    console.log(res.data);
-
-    if (res.data.success) {
-      navigate("/booking-success");
-    }
-
-  } catch (error) {
-    console.log(error.response?.data);
-    alert(error.response?.data?.message);
-  } finally {
-    setLoading(false);
-  }
-};
-
   return (
     <motion.section
       className="min-h-screen bg-slate-50 py-10"
@@ -129,14 +150,14 @@ console.log(bookingPayload);
                 Full Name
               </label>
 
-              <input
-                type="text"
-                name="fullName"
-                value={form.fullName}
-                onChange={handleChange}
-                placeholder="Enter your name"
-                className="w-full border rounded-xl p-3"
-              />
+          <input
+              type="text"
+              name="fullName"
+              value={form.fullName}
+              onChange={handleChange}
+              placeholder="Enter Full Name"
+              className="w-full border rounded-xl p-3 text-black bg-white"
+          />
             </div>
 
             <div>
@@ -146,13 +167,13 @@ console.log(bookingPayload);
               </label>
 
               <input
-                type="email"
-                name="email"
-                value={form.email}
-                onChange={handleChange}
-                placeholder="john@example.com"
-                className="w-full border rounded-xl p-3"
-              />
+              type="email"
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+              placeholder="john@example.com"
+              className="w-full border rounded-xl p-3 text-black bg-white placeholder:text-gray-400"
+            />
             </div>
 
             <div>
@@ -167,7 +188,7 @@ console.log(bookingPayload);
                 value={form.phone}
                 onChange={handleChange}
                 placeholder="+91 9876543210"
-                className="w-full border rounded-xl p-3"
+                className="w-full border rounded-xl p-3 text-black bg-white"
               />
             </div>
 
@@ -183,7 +204,7 @@ console.log(bookingPayload);
                 value={form.license}
                 onChange={handleChange}
                 placeholder="DL-XXXXXXXX"
-                className="w-full border rounded-xl p-3"
+                className="w-full border rounded-xl p-3 text-black bg-white"
               />
             </div>
 
@@ -199,7 +220,7 @@ console.log(bookingPayload);
                 value={form.pickup}
                 onChange={handleChange}
                 placeholder="Jabalpur, Madhya Pradesh"
-                className="w-full border rounded-xl p-3"
+                className="w-full border rounded-xl p-3 text-black bg-white"
               />
             </div>
           </div>
@@ -278,17 +299,27 @@ console.log(bookingPayload);
               <span>₹{finalAmount}</span>
             </div>
           </div>
-
+           {error && (
+            <p className="text-red-500 mb-4">
+              {error}
+            </p>
+          )}
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            disabled={loading}
+            disabled={isProcessing}
             onClick={handlePayment}
             className="mt-8 w-full bg-indigo-600 text-white py-4 rounded-xl font-semibold hover:bg-indigo-700 transition disabled:opacity-50"
           >
-            {loading
-              ? "Processing..."
-              : "Proceed To Payment"}
+            {
+          checkoutState === "CREATING_BOOKING"
+            ? "Reserving Vehicle..."
+            : checkoutState === "INITIALIZING_PAYMENT"
+            ? "Creating Payment..."
+            : checkoutState === "VERIFYING"
+            ? "Verifying Payment..."
+            : "Proceed To Payment"
+        }
           </motion.button>
         </div>
       </div>

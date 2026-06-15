@@ -3,18 +3,19 @@ import axios from "axios";
 
 export default function AddVehicle() {
   const [formData, setFormData] = useState({
-    name: "",
-    brand: "",
-    type: "car",
-    model: "",
-    year: "",
-    rentPerDay: "",
-    fuelType: "petrol",
-    transmission: "manual",
-    location: "",
-    seats: "",
-    description: "",
-  });
+  name: "",
+  brand: "",
+  type: "car",
+  model: "",
+  year: "",
+  rentPerDay: "",
+  fuelType: "petrol",
+  transmission: "manual",
+  location: "",
+  seats: "",
+  description: "",
+  images: "",
+});
 
   const handleChange = (e) => {
     setFormData({
@@ -28,10 +29,16 @@ export default function AddVehicle() {
 
     try {
       const token = localStorage.getItem("token");
+      const payload = {
+      ...formData,
+      images: formData.images
+        ? [formData.images]
+        : [],
+    };
 
       const res = await axios.post(
         "http://localhost:5000/api/vehicles",
-        formData,
+        payload,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -237,6 +244,21 @@ export default function AddVehicle() {
               required
             />
           </div>
+
+          <div>
+      <label className="block mb-2 font-semibold text-black">
+        Image URL
+      </label>
+
+      <input
+        type="text"
+        name="images"
+        value={formData.images}
+        onChange={handleChange}
+        className="w-full border p-3 rounded-lg text-black"
+        placeholder="Paste image URL"
+      />
+    </div>
 
           <button
             type="submit"

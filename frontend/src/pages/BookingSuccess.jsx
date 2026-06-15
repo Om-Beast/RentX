@@ -1,6 +1,10 @@
 import { Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 export default function BookingSuccess() {
+  const { id } = useParams();
+
+console.log("BOOKING ID =", id);
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-100">
       <div className="bg-white p-10 rounded-3xl shadow-xl text-center max-w-lg">
