@@ -54,8 +54,18 @@ const bookingSchema = new mongoose.Schema(
     },
     timeline: [
   {
-    status: String,
+    eventType: {
+      type: String,
+      required: true,
+    },
+
+    actor: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+
     note: String,
+
     createdAt: {
       type: Date,
       default: Date.now,

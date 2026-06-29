@@ -1,5 +1,6 @@
+import "dotenv/config";
+
 import express from "express";
-import dotenv from "dotenv";
 import cors from "cors";
 
 import connectDB from "./config/db.js";
@@ -9,8 +10,8 @@ import vehicleRoutes from "./modules/vehicles/vehicle.routes.js";
 import bookingRoutes from "./modules/bookings/booking.routes.js";
 import dashboardRoutes from "./modules/dashboard/dashboard.routes.js";
 import paymentRoutes from "./modules/payment/payment.routes.js";
-
-dotenv.config();
+import notificationRoutes from "./modules/notifications/notification.routes.js";
+import aiRoutes from "./modules/ai/ai.routes.js";
 
 // Database Connect
 await connectDB();
@@ -38,6 +39,11 @@ app.use("/api/vehicles", vehicleRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use(
+  "/api/notifications",
+  notificationRoutes
+);
+app.use("/api/ai", aiRoutes);
 
 // Health Check
 app.get("/", (req, res) => {

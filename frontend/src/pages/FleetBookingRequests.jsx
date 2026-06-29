@@ -47,6 +47,7 @@ export default function FleetBookingRequests() {
         }
       );
       // API assumed to return { success: true, data: [...] } or directly the array
+      console.log("API RESPONSE =", data);
       setBookings(data.bookings || []);
       setError(null);
     } catch (err) {
@@ -88,7 +89,7 @@ export default function FleetBookingRequests() {
           b._id === bookingId
             ? {
                 ...b,
-                status: action === "confirm" ? "CONFIRMED" : "CANCELLED",
+                bookingStatus: action === "confirm" ?  "approved": "rejected",
               }
             : b
         )
@@ -192,13 +193,15 @@ export default function FleetBookingRequests() {
                 <div className="mt-2">
                   <span
                     className={`inline-block px-3 py-1 text-xs font-medium rounded-full ${
-                      booking.bookingStatus === "PENDING"
+                      booking.bookingStatus === "pending_owner_approval"
                         ? "bg-yellow-500/20 text-yellow-300"
-                        : booking.bookingStatus === "CONFIRMED"
-                        ? "bg-green-500/20 text-green-300"
-                        : booking.bookingStatus === "CANCELLED"
-                        ? "bg-red-500/20 text-red-300"
-                        : "bg-blue-500/20 text-blue-300"
+                       : booking.bookingStatus === "approved"
+                      ? "bg-green-500/20 text-green-300"
+                      : booking.bookingStatus === "rejected"
+                      ? "bg-red-500/20 text-red-300"
+                      : booking.bookingStatus === "cancelled"
+                      ? "bg-red-500/20 text-red-300"
+                      : "bg-blue-500/20 text-blue-300"
                     }`}
                   >
                     {booking.bookingStatus}
@@ -206,7 +209,7 @@ export default function FleetBookingRequests() {
                 </div>
 
                 {/* Action buttons – only for pending bookings */}
-                {booking.bookingStatus === "PENDING" && (
+                {booking.bookingStatus === "pending_owner_approval" && (
                   <div className="mt-4 flex space-x-3">
                     <button
                       onClick={() => handleAction(booking._id, "confirm")}

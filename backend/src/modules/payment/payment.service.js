@@ -192,18 +192,20 @@ return (
   {
     paymentStatus: 'paid',
     bookingStatus: 'pending_owner_approval',
-    timeline: [
-      {
-        status: 'payment_completed',
-        note: 'Payment verified successfully',
-        createdAt: new Date(),
-      },
-      {
-        status: 'pending_owner_approval',
-        note: 'Waiting for owner approval',
-        createdAt: new Date(),
-      },
-    ],
+   timeline: [
+  {
+    eventType: "PAYMENT_COMPLETED",
+    actor: payment.user,
+    note: "Payment verified successfully",
+    createdAt: new Date(),
+  },
+  {
+    eventType: "PENDING_OWNER_APPROVAL",
+    actor: payment.user,
+    note: "Waiting for owner approval",
+    createdAt: new Date(),
+  },
+],
   },
   session
 );

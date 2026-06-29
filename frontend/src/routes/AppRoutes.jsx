@@ -14,6 +14,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import MyVehicles from "../pages/MyVehicles";
 import EditVehicle from "../pages/EditVehicle";
 import FleetBookingRequests from "../pages/FleetBookingRequests";
+import TripPlanner from "../pages/ai/TripPlanner";
 
 function AppRoutes() {
   return (
@@ -104,6 +105,15 @@ function AppRoutes() {
   element={
     <ProtectedRoute>
       <EditVehicle />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/ai-trip-planner"
+  element={
+    <ProtectedRoute>
+      <TripPlanner />
     </ProtectedRoute>
   }
 />

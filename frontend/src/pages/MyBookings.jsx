@@ -263,6 +263,34 @@ const res = await axios.get(
                 </div>
               )}
 
+              {/* Timeline Preview */}
+<div className="mt-6">
+  <h3 className="font-bold text-lg mb-3 text-slate-700">
+    Booking Timeline
+  </h3>
+
+  <div className="space-y-2">
+    {booking.timeline?.slice(-3).reverse().map((event, index) => (
+      <div
+        key={index}
+        className="flex items-center gap-3 text-sm bg-slate-50 p-3 rounded-xl"
+      >
+        <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
+
+        <div>
+          <p className="font-medium">
+            {event.eventType}
+          </p>
+
+          <p className="text-gray-500 text-xs">
+            {event.note}
+          </p>
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
+
               {/* Cancel Button */}
               {booking.bookingStatus  !==
                 "CANCELLED" && (

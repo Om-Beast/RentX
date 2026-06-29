@@ -1,5 +1,7 @@
 import Booking from "../../models/Booking.js";
 import Vehicle from "../../models/Vehicle.js";
+import NotificationService from "../notifications/notification.service.js";
+import TrustService from "../trust/trust.service.js";
 
 export const createBookingService = async (
   bookingData,
@@ -30,7 +32,11 @@ export const createBookingService = async (
     vehicle: vehicleId,
 
     bookingStatus: {
-      $in: ["pending", "confirmed"],
+     $in: [
+      "pending_payment",
+      "pending_owner_approval",
+      "approved"
+    ],
     },
 
     startDate: {
@@ -71,7 +77,7 @@ const securityDeposit = 1000;
     platformFee +
     securityDeposit;
 
-  const booking = await Booking.create({
+const booking = await Booking.create({
   user: customerId,
 
   vehicle: vehicleId,
@@ -80,9 +86,17 @@ const securityDeposit = 1000;
 
   endDate: returnDate,
 
- totalPrice: finalAmount,
+  totalPrice: finalAmount,
 
-  bookingStatus: "pending",
+  bookingStatus: "pending_payment",
+
+  timeline: [
+    {
+      eventType: "BOOKING_CREATED",
+      actor: customerId,
+      note: "Booking created successfully",
+    },
+  ],
 });
 
   return booking;
@@ -101,26 +115,46 @@ export const getMyBookingsService =
 
 export const getOwnerBookingsService =
   async (ownerId) => {
-    const vehicles =
-      await Vehicle.find({
-        owner: ownerId,
-      }).select("_id");
-
-    const vehicleIds =
-      vehicles.map(
-        (vehicle) => vehicle._id
+    console.log("OWNER ID TYPE =", typeof ownerId);
+   console.log("OWNER ID =", ownerId);
+        const vehicles =
+        await Vehicle.find({
+          owner: ownerId,
+        }).select("_id");
+        console.log(
+        "ALL OWNER VEHICLES =",
+        await Vehicle.find({ owner: ownerId })
       );
+          console.log("OWNER ID =", ownerId);
+        console.log("OWNER VEHICLES =", vehicles);
 
-    return await Booking.find({
-      vehicle: {
-        $in: vehicleIds,
-      },
-    })
-      .populate("vehicle")
-      .populate("user", "name email")
-      .sort({
-        createdAt: -1,
-      });
+        const vehicleIds =
+          vehicles.map(
+            (vehicle) => vehicle._id
+          );
+          console.log(
+        "OWNER VEHICLE IDS =",
+        vehicleIds
+        );
+
+      const bookings =
+      await Booking.find({
+        vehicle: {
+          $in: vehicleIds,
+        },
+      })
+        .populate("vehicle")
+        .populate("user", "name email")
+        .sort({
+          createdAt: -1,
+        });
+
+    console.log(
+      "OWNER BOOKINGS =",
+      bookings
+    );
+
+    return bookings;
   };
 
 export const cancelBookingService =
@@ -141,8 +175,8 @@ export const cancelBookingService =
     }
 
     const isOwner =
-      booking.customer.toString() ===
-      userId.toString();
+  booking.user.toString() ===
+  userId.toString();
 
     if (
       role !== "ADMIN" &&
@@ -165,16 +199,21 @@ export const cancelBookingService =
     booking.bookingStatus =
       "cancelled";
 
-    await booking.save();
+booking.timeline.push({
+  eventType: "BOOKING_CANCELLED",
+  actor: userId,
+  note: "Booking cancelled",
+});
 
+await booking.save();
     return booking;
   };
   export const confirmBookingService =
-  async (
-    bookingId,
-    requesterId,
-    requesterRole
-  ) => {
+      async (
+        bookingId,
+        requesterId,
+        requesterRole
+      ) => {
     const booking =
       await Booking.findById(
         bookingId
@@ -188,7 +227,7 @@ export const cancelBookingService =
 
     if (
       booking.bookingStatus !==
-      "pending"
+      "pending_owner_approval"
     ) {
       throw new Error(
         "Only pending bookings can be confirmed"
@@ -210,9 +249,33 @@ export const cancelBookingService =
     }
 
     booking.bookingStatus =
-      "confirmed";
-
+      "approved";
+      booking.timeline.push({
+  eventType: "BOOKING_APPROVED",
+  actor: requesterId,
+  note: "Fleet owner approved booking",
+});
+await NotificationService.createNotification({
+  user: booking.user,
+  type: "BOOKING_APPROVED",
+  title: "Booking Approved",
+  message:
+    "Your booking has been approved by the vehicle owner.",
+  priority: "HIGH",
+  metadata: {
+    bookingId: booking._id,
+    vehicleId: booking.vehicle._id,
+  },
+});
     await booking.save();
+    await TrustService.applyEvent(
+  booking.user,
+  TrustService.EVENT_TYPES.OWNER_APPROVED,
+  {
+    bookingId: booking._id,
+    actorId: requesterId,
+  }
+);
 
     return booking;
   };
@@ -236,7 +299,7 @@ export const rejectBookingService =
 
     if (
       booking.bookingStatus !==
-      "pending"
+       "pending_owner_approval"
     ) {
       throw new Error(
         "Only pending bookings can be rejected"
@@ -257,10 +320,14 @@ export const rejectBookingService =
       );
     }
 
-    booking.bookingStatus =
-      "cancelled";
 
-    await booking.save();
+   booking.bookingStatus = "rejected";
 
-    return booking;
+booking.timeline.push({
+  eventType: "BOOKING_REJECTED",
+  actor: requesterId,
+  note: "Fleet owner rejected booking",
+});
+
+await booking.save();
   };
