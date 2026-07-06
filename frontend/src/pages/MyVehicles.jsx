@@ -21,7 +21,7 @@ export default function MyVehicles() {
     if (!confirmDelete) return;
 
     await axios.delete(
-      `http://localhost:5000/api/vehicles/${id}`,
+      `${import.meta.env.VITE_API_URL}/api/vehicles/${id}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -50,7 +50,7 @@ const handleToggleAvailability =
         localStorage.getItem("token");
 
       await axios.patch(
-        `http://localhost:5000/api/vehicles/${id}/toggle-availability`,
+        `${import.meta.env.VITE_API_URL}/api/vehicles/${id}/toggle-availability`,
         {},
         {
           headers: {
@@ -75,7 +75,7 @@ const handleToggleAvailability =
       const token = localStorage.getItem("token");
 
       const res = await axios.get(
-        "http://localhost:5000/api/vehicles/my-vehicles",
+        "${import.meta.env.VITE_API_URL}/api/vehicles/my-vehicles",
         {
           headers: {
             Authorization: `Bearer ${token}`,

@@ -31,7 +31,7 @@ export default function EditVehicle() {
     try {
       const res =
         await axios.get(
-          `http://localhost:5000/api/vehicles/${id}`
+          `${import.meta.env.VITE_API_URL}/api/vehicles/${id}`
         );
 
       const vehicle =
@@ -76,7 +76,7 @@ export default function EditVehicle() {
         );
 
       await axios.put(
-        `http://localhost:5000/api/vehicles/${id}`,
+        `${import.meta.env.VITE_API_URL}/api/vehicles/${id}`,
         formData,
         {
           headers: {

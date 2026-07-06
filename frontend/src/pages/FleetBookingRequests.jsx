@@ -39,7 +39,7 @@ export default function FleetBookingRequests() {
     try {
       setLoading(true);
       const { data } = await axios.get(
-        "http://localhost:5000/api/bookings/owner-bookings",
+        "${import.meta.env.VITE_API_URL}/api/bookings/owner-bookings",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -72,7 +72,7 @@ export default function FleetBookingRequests() {
   // ---------------------------------------------------------------
   const handleAction = async (bookingId, action) => {
     try {
-      const endpoint = `http://localhost:5000/api/bookings/${bookingId}/${action}`;
+      const endpoint = `${import.meta.env.VITE_API_URL}/api/bookings/${bookingId}/${action}`;
       await axios.patch(
         endpoint,
         {}, // no body needed

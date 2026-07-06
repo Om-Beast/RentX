@@ -51,7 +51,7 @@ export default function MyBookings() {
   localStorage.getItem("token");
 
 const res = await axios.get(
-  "http://localhost:5000/api/bookings/my-bookings",
+  "${import.meta.env.VITE_API_URL}/api/bookings/my-bookings",
   {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -75,7 +75,7 @@ const res = await axios.get(
       localStorage.getItem("token");
 
     await axios.patch(
-      `http://localhost:5000/api/bookings/${bookingId}/cancel`,
+      `${import.meta.env.VITE_API_URL}/api/bookings/${bookingId}/cancel`,
       {},
       {
         headers: {

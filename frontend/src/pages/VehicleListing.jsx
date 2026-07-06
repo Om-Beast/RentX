@@ -17,7 +17,7 @@ export default function VehicleListing() {
     const fetchVehicles = async () => {
       try {
         const res = await axios.get(
-          "http://localhost:5000/api/vehicles"
+          `${import.meta.env.VITE_API_URL}/api/vehicles`
         );
 
         console.log("API DATA:", res.data);

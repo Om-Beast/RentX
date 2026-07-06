@@ -29,7 +29,7 @@ const TripPlanner = () => {
     setError(null);
     setResult(null);
     try {
-      const response = await axios.post('http://localhost:5000/api/ai/trip-planner', {
+      const response = await axios.post('${import.meta.env.VITE_API_URL}/api/ai/trip-planner', {
         ...formData,
         days: Number(formData.days),
         budget: Number(formData.budget),
