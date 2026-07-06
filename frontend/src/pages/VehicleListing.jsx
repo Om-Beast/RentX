@@ -33,6 +33,7 @@ export default function VehicleListing() {
 
   console.log("Vehicles:", vehicles);
 
+
   const filteredVehicles = vehicles.filter((vehicle) => {
     const matchesSearch = vehicle.name
       .toLowerCase()
@@ -45,6 +46,7 @@ export default function VehicleListing() {
 
     return matchesSearch && matchesCategory;
   });
+  console.log("Filtered:", filteredVehicles);
 
   return (
     <div className="min-h-screen bg-slate-50">
