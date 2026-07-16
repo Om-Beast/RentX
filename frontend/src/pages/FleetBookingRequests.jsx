@@ -39,7 +39,7 @@ export default function FleetBookingRequests() {
     try {
       setLoading(true);
       const { data } = await axios.get(
-        "${import.meta.env.VITE_API_URL}/api/bookings/owner-bookings",
+        `${import.meta.env.VITE_API_URL}/api/bookings/owner-bookings`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

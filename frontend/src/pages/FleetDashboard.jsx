@@ -26,7 +26,7 @@ export default function FleetDashboard() {
     const fetchDashboardData = async () => {
       try {
         const statsRes = await axios.get(
-          "${import.meta.env.VITE_API_URL}/api/dashboard/stats"
+         `${import.meta.env.VITE_API_URL}/api/dashboard/stats`
         );
 
         setStats({
@@ -37,7 +37,7 @@ export default function FleetDashboard() {
         });
 
         const bookingsRes = await axios.get(
-          "${import.meta.env.VITE_API_URL}/api/dashboard/recent-bookings"
+         `${import.meta.env.VITE_API_URL}/api/dashboard/recent-bookings`
         );
 
         setRecentBookings(bookingsRes.data.bookings || []);

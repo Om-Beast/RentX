@@ -36,15 +36,15 @@ export default function AddVehicle() {
         : [],
     };
 
-      const res = await axios.post(
-        "${import.meta.env.VITE_API_URL}/api/vehicles",
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+     const res = await axios.post(
+  `${import.meta.env.VITE_API_URL}/api/vehicles`,
+  payload,
+  {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  }
+);
 
       alert("Vehicle Added Successfully 🚀");
 

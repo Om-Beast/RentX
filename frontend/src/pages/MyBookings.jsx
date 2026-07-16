@@ -51,7 +51,7 @@ export default function MyBookings() {
   localStorage.getItem("token");
 
 const res = await axios.get(
-  "${import.meta.env.VITE_API_URL}/api/bookings/my-bookings",
+ `${import.meta.env.VITE_API_URL}/api/bookings/my-bookings`,
   {
     headers: {
       Authorization: `Bearer ${token}`,

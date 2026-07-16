@@ -101,7 +101,7 @@ const {
 //   localStorage.getItem("token");
 
 //     const res = await axios.post(
-//       "${import.meta.env.VITE_API_URL}/api/bookings",
+//    `${import.meta.env.VITE_API_URL}/api/bookings`
 //       bookingPayload,
 //       {
 //         headers: {
