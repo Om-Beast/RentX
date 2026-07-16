@@ -26,9 +26,9 @@ export default function Login() {
       setLoading(true);
 
       const { data } = await axios.post(
-        "${import.meta.env.VITE_API_URL}/api/auth/login",
-        formData
-      );
+      `${import.meta.env.VITE_API_URL}/api/auth/login`,
+      formData
+    );
 
       const { token, user } = data;
 
