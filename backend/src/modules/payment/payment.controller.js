@@ -1,112 +1,70 @@
-import PaymentService from './payment.service.js';
+import PaymentService from "./payment.service.js";
+import logger from "../../utils/logger.js";
 
 class PaymentController {
-  /**
-   * @route POST /api/payments/create-order
-   * @desc Create a Razorpay order securely
-   * @access Private (Requires Authentication)
-   */
-  async createOrder(req, res) {
+  async createOrder(req, res, next) {
     try {
       const { bookingId } = req.body;
-      const userId = req.user._id; // Assuming auth middleware attaches user object
-      const idempotencyKey = req.headers['x-idempotency-key'];
+      const idempotencyKey = req.headers["x-idempotency-key"];
 
       if (!bookingId) {
-        return res.status(400).json({ 
-          success: false, 
-          message: 'bookingId is required' 
-        });
+        return res.status(400).json({ success: false, error: { code: "VALIDATION_ERROR", message: "bookingId is required" } });
       }
 
       const orderData = await PaymentService.createOrder({
         bookingId,
-        userId,
-        idempotencyKey
+        userId: req.user._id,
+        idempotencyKey,
       });
 
-      return res.status(201).json({
-        success: true,
-        message: 'Order created successfully',
-        data: orderData
-      });
+      return res.status(201).json({ success: true, ...orderData });
     } catch (error) {
-      console.error(`[PaymentController - createOrder]:`, error);
-      const statusCode = error.statusCode || 500;
-      return res.status(statusCode).json({ 
-        success: false, 
-        message: error.message || 'Internal Server Error' 
-      });
+      next(error);
     }
   }
 
-  /**
-   * @route POST /api/payments/verify
-   * @desc Verify Razorpay payment signature
-   * @access Private (Requires Authentication)
-   */
-  async verifyPayment(req, res) {
+  async verifyPayment(req, res, next) {
     try {
-      console.log("VERIFY BODY =", req.body);
       const { razorpayOrderId, razorpayPaymentId, razorpaySignature } = req.body;
 
       if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
-        return res.status(400).json({ 
-          success: false, 
-          message: 'Missing payment verification details' 
-        });
+        return res.status(400).json({ success: false, error: { code: "VALIDATION_ERROR", message: "Missing payment verification details" } });
       }
 
       const payment = await PaymentService.verifySignature({
         razorpayOrderId,
         razorpayPaymentId,
-        razorpaySignature
+        razorpaySignature,
       });
 
       return res.status(200).json({
         success: true,
-        message: 'Payment verified successfully',
-        data: {
-          paymentId: payment._id,
-          status: payment.status
-        }
+        message: "Payment verified successfully",
+        paymentId: payment._id,
+        status: payment.status,
       });
     } catch (error) {
-      console.error(`[PaymentController - verifyPayment]:`, error);
-      const statusCode = error.statusCode || 500;
-      return res.status(statusCode).json({ 
-        success: false, 
-        message: error.message || 'Internal Server Error' 
-      });
+      next(error);
     }
   }
 
-  /**
-   * @route POST /api/payments/webhook
-   * @desc Handle Razorpay Webhooks (payment.captured, payment.failed, refund.processed)
-   * @access Public (Requires Webhook Signature Verification)
-   */
   async webhookHandler(req, res) {
     try {
-      const webhookSignature = req.headers['x-razorpay-signature'];
-      
+      const webhookSignature = req.headers["x-razorpay-signature"];
       if (!webhookSignature) {
-        return res.status(400).send('Webhook signature missing');
+        return res.status(400).send("Webhook signature missing");
       }
 
-      // Pass the parsed JSON body and signature to the service for processing
-      await PaymentService.processWebhook(req.body, webhookSignature);
+      // req.body is raw buffer from express.raw() in server.js
+      const webhookBody = JSON.parse(req.body.toString());
+      await PaymentService.processWebhook(webhookBody, webhookSignature);
 
-      // Always return 200 OK to Razorpay immediately to acknowledge receipt 
-      // and prevent webhook retries
-      return res.status(200).send('OK');
+      // Always return 200 to Razorpay — prevent unnecessary retries
+      return res.status(200).send("OK");
     } catch (error) {
-      console.error(`[PaymentController - webhookHandler]:`, error);
-      
-      // We still return 200 OK if the error was handled internally (e.g., duplicate webhook).
-      // Return 400 or 500 ONLY if you want Razorpay to retry the webhook later.
-      const statusCode = error.statusCode === 401 ? 401 : 200;
-      return res.status(statusCode).send('Webhook Processing Completed With Errors');
+      logger.warn("PaymentController", "WEBHOOK_ERROR", { error: error.message });
+      // Return 200 even on errors (except auth failures) to prevent Razorpay retries
+      return res.status(200).send("Webhook received");
     }
   }
 }

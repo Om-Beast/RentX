@@ -76,12 +76,12 @@ const paymentSchema = new mongoose.Schema(
 );
 
 paymentSchema.index({ booking: 1 });
-
 paymentSchema.index({ user: 1 });
-
 paymentSchema.index({ status: 1 });
+// Note: razorpayOrderId, razorpayPaymentId, and idempotencyKey already have
+// unique:true sparse:true declared in the schema field definitions above.
 
-paymentSchema.set("autoIndex", false);
+
 
 
 

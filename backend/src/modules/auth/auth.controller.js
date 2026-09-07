@@ -1,41 +1,25 @@
-import {
-  registerUserService,
-  loginUserService,
-} from "./auth.service.js";
+import { registerUserService, loginUserService } from "./auth.service.js";
 
-export const register = async (req, res) => {
-  console.log("REGISTER ROUTE HIT");
+export const registerUser = async (req, res, next) => {
   try {
-    const user = await registerUserService(req.body);
-
-    res.status(201).json({
-      success: true,
-      user,
-    });
+    const { name, email, password, role } = req.body;
+    const user = await registerUserService({ name, email, password, role });
+    res.status(201).json({ success: true, user });
   } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+    next(error);
   }
 };
 
-export const login = async (req, res) => {
+export const loginUser = async (req, res, next) => {
   try {
-    console.log("LOGIN BODY =", req.body);
-
-    const data = await loginUserService(req.body);
-
-    res.status(200).json({
-      success: true,
-      ...data,
-    });
+    const { email, password } = req.body;
+    const data = await loginUserService({ email, password });
+    res.status(200).json({ success: true, ...data });
   } catch (error) {
-    console.log("LOGIN ERROR =", error);
-
-    res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+    next(error);
   }
+};
+
+export const getMe = async (req, res) => {
+  res.status(200).json({ success: true, user: req.user });
 };

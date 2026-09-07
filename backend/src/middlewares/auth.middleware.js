@@ -1,80 +1,93 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import { AuthenticationError, AuthorizationError } from "../utils/errors.js";
+import logger from "../utils/logger.js";
 
+/**
+ * Verifies the Bearer JWT from Authorization header.
+ * Attaches the authenticated user to req.user.
+ * Throws AuthenticationError (401) on any failure.
+ */
 export const protect = async (req, res, next) => {
-  console.log(
-  "PAYMENT AUTH HEADER =",
-  req.headers.authorization
-);
   try {
     const authHeader = req.headers.authorization;
-    console.log("AUTH HEADER =", req.headers.authorization);
 
-    if (
-      !authHeader ||
-      !authHeader.startsWith("Bearer ")
-    ) {
-      return res.status(401).json({
-        success: false,
-        message: "No token provided",
-      });
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      throw new AuthenticationError("No authentication token provided");
     }
 
     const token = authHeader.split(" ")[1];
 
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET
-    );
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (jwtErr) {
+      throw new AuthenticationError(
+        jwtErr.name === "TokenExpiredError"
+          ? "Authentication token has expired"
+          : "Invalid authentication token"
+      );
+    }
 
-    const user = await User.findById(
-      decoded.userId
-    ).select("-password");
+    const user = await User.findById(decoded.userId).select("-password");
 
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: "User not found",
-      });
+      throw new AuthenticationError("User account not found");
+    }
+
+    if (user.isSuspended) {
+      throw new AuthorizationError("Your account has been suspended");
     }
 
     req.user = user;
-
-    console.log("========== AUTH DEBUG ==========");
-    console.log("USER ID =", user._id);
-    console.log("USER EMAIL =", user.email);
-    console.log("USER ROLE =", user.role);
-
     next();
   } catch (error) {
-    console.log("AUTH ERROR:", error);
-
-    return res.status(401).json({
-      success: false,
-      message: "Unauthorized",
-    });
+    next(error);
   }
 };
 
+/**
+ * Role-based access control guard.
+ * Must be used AFTER protect().
+ *
+ * Usage: authorize("FLEET_OWNER", "ADMIN")
+ * Throws AuthorizationError (403) if user role is not in the allowed list.
+ */
 export const authorize = (...roles) => {
-  return (req, res, next) => {
-    console.log(
-      "ALLOWED ROLES =",
-      roles
-    );
-
-    console.log(
-      "CURRENT ROLE =",
-      req.user?.role
-    );
+  return (req, _res, next) => {
+    if (!req.user) {
+      return next(new AuthenticationError("Authentication required"));
+    }
 
     if (!roles.includes(req.user.role)) {
-      return res.status(403).json({
-        success: false,
-        message: "Access Denied",
+      logger.warn("AuthMiddleware", "AUTHZ_FAILURE", {
+        requestId: req.requestId,
+        userId: req.user._id,
+        userRole: req.user.role,
+        requiredRoles: roles,
+        path: req.path,
       });
+      return next(
+        new AuthorizationError(
+          `This action requires one of the following roles: ${roles.join(", ")}`
+        )
+      );
     }
 
     next();
   };
+};
+
+/**
+ * Ownership guard — ensures the authenticated user owns the resource.
+ * Usage: requireOwnership(req.user._id, resource.owner)
+ * Throws AuthorizationError if they don't match (and user isn't ADMIN).
+ */
+export const requireOwnership = (userId, ownerId, allowAdmin = true, userRole = null) => {
+  const isOwner = userId.toString() === ownerId.toString();
+  const isAdmin = allowAdmin && userRole === "ADMIN";
+
+  if (!isOwner && !isAdmin) {
+    throw new AuthorizationError("You do not have permission to modify this resource");
+  }
 };

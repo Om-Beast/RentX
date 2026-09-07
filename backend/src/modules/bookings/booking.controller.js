@@ -5,132 +5,68 @@ import {
   cancelBookingService,
   confirmBookingService,
   rejectBookingService,
+  getBookingByIdService,
 } from "./booking.service.js";
 
-export const createBooking = async (
-  req,
-  res
-) => {
+export const createBooking = async (req, res, next) => {
   try {
-    const booking =
-      await createBookingService(
-        req.body,
-        req.user._id
-      );
-
-    res.status(201).json({
-      success: true,
-      booking,
-    });
+    const booking = await createBookingService(req.body, req.user._id);
+    res.status(201).json({ success: true, booking });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    next(error);
   }
 };
 
-export const getMyBookings =
-  async (req, res) => {
-    try {
-      const bookings =
-        await getMyBookingsService(
-          req.user._id
-        );
+export const getMyBookings = async (req, res, next) => {
+  try {
+    const bookings = await getMyBookingsService(req.user._id);
+    res.status(200).json({ success: true, bookings });
+  } catch (error) {
+    next(error);
+  }
+};
 
-      res.status(200).json({
-        success: true,
-        bookings,
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: error.message,
-      });
-    }
-  };
+export const getOwnerBookings = async (req, res, next) => {
+  try {
+    const bookings = await getOwnerBookingsService(req.user._id);
+    res.status(200).json({ success: true, bookings });
+  } catch (error) {
+    next(error);
+  }
+};
 
-export const getOwnerBookings =
-  async (req, res) => {
-    try {
-      const bookings =
-        await getOwnerBookingsService(
-          req.user._id
-        );
+export const getBookingById = async (req, res, next) => {
+  try {
+    const booking = await getBookingByIdService(req.params.id, req.user._id, req.user.role);
+    res.status(200).json({ success: true, booking });
+  } catch (error) {
+    next(error);
+  }
+};
 
-      res.status(200).json({
-        success: true,
-        bookings,
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: error.message,
-      });
-    }
-  };
+export const cancelBooking = async (req, res, next) => {
+  try {
+    const booking = await cancelBookingService(req.params.id, req.user._id, req.user.role);
+    res.status(200).json({ success: true, booking });
+  } catch (error) {
+    next(error);
+  }
+};
 
-export const cancelBooking =
-  async (req, res) => {
-    try {
-      const booking =
-        await cancelBookingService(
-          req.params.id,
-          req.user._id,
-          req.user.role
-        );
+export const confirmBooking = async (req, res, next) => {
+  try {
+    const booking = await confirmBookingService(req.params.id, req.user._id, req.user.role);
+    res.status(200).json({ success: true, booking });
+  } catch (error) {
+    next(error);
+  }
+};
 
-      res.status(200).json({
-        success: true,
-        booking,
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: error.message,
-      });
-    }
-  };
-  export const confirmBooking =
-  async (req, res) => {
-    try {
-      const booking =
-        await confirmBookingService(
-          req.params.id,
-          req.user._id,
-          req.user.role
-        );
-
-      res.status(200).json({
-        success: true,
-        booking,
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: error.message,
-      });
-    }
-  };
-
-export const rejectBooking =
-  async (req, res) => {
-    try {
-      const booking =
-        await rejectBookingService(
-          req.params.id,
-          req.user._id,
-          req.user.role
-        );
-
-      res.status(200).json({
-        success: true,
-        booking,
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: error.message,
-      });
-    }
-  };
+export const rejectBooking = async (req, res, next) => {
+  try {
+    const booking = await rejectBookingService(req.params.id, req.user._id, req.user.role);
+    res.status(200).json({ success: true, booking });
+  } catch (error) {
+    next(error);
+  }
+};

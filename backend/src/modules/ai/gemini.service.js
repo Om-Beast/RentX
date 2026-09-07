@@ -1,50 +1,53 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
-console.log("Gemini Key Loaded:", process.env.GEMINI_API_KEY);
-// 1. Environment validation
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import logger from "../../utils/logger.js";
+import { ExternalServiceError } from "../../utils/errors.js";
+
 if (!process.env.GEMINI_API_KEY) {
-  console.warn('[GeminiService] WARNING: GEMINI_API_KEY environment variable is missing.');
+  logger.warn("GeminiService", "MISSING_API_KEY", {
+    message: "GEMINI_API_KEY not set — AI features will be unavailable",
+  });
 }
-// 2. Create a singleton Gemini client
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-// Define the model - Flash is optimal for speed and JSON structure tasks
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 const MODEL_NAME = "gemini-2.5-flash";
-const geminiService = {
-  /**
-   * Sends a prompt to the Gemini API and parses the response as structured JSON.
-   * Ensures high reliability using specific generation constraints.
-   *
-   * @param {string} prompt - The fully constructed prompt string.
-   * @returns {Promise<Object>} The parsed JSON response.
-   * @throws {Error} If the API call fails or JSON parsing fails.
-   */
-  generateStructuredResponse: async (prompt) => {
+const TIMEOUT_MS = 10000;
+
+/**
+ * Base function for all Gemini calls.
+ * - 10 second timeout
+ * - Graceful fallback on failure
+ * - JSON output enforced
+ */
+const callGemini = async (prompt, fallback = null) => {
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error("AI request timed out")), TIMEOUT_MS)
+  );
+
+  try {
+    const model = genAI.getGenerativeModel({
+      model: MODEL_NAME,
+      generationConfig: {
+        responseMimeType: "application/json",
+        temperature: 0.2,
+      },
+    });
+
+    const result = await Promise.race([
+      model.generateContent(prompt),
+      timeoutPromise,
+    ]);
+
+    const text = result.response.text();
     try {
-      // Initialize the model with configuration enforcing JSON output
-      const model = genAI.getGenerativeModel({
-        model: MODEL_NAME,
-        generationConfig: {
-          responseMimeType: 'application/json',
-          temperature: 0.2, // Low temperature for deterministic, structured output
-        },
-      });
-      // Execute the request
-      const result = await model.generateContent(prompt);
-      const responseText = result.response.text();
-      // Parse and return the structured data
-      try {
-  return JSON.parse(responseText);
-} catch {
-  return {
-    rawResponse: responseText,
-  };
-}
-    } catch (error) {
-      // Log the internal error for debugging and monitoring
-      console.error('[GeminiService.generateStructuredResponse] Error:', error.message);
-      
-      // Throw a clean, sanitized error upstream
-      throw new Error(`AI generation failed: ${error.message}`);
+      return JSON.parse(text);
+    } catch {
+      return { rawResponse: text };
     }
+  } catch (err) {
+    logger.warn("GeminiService", "AI_CALL_FAILED", { error: err.message });
+    if (fallback !== null) return fallback;
+    throw new ExternalServiceError("AI service temporarily unavailable", "GEMINI");
   }
 };
-export default geminiService;
+
+export default { callGemini };

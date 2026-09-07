@@ -25,15 +25,16 @@ const trustHistorySchema = new Schema(
       type: Number,
       required: [true, 'Previous score is required.'],
       min: [0, 'Previous score cannot be negative.'],
-      max: [100, 'Previous score cannot exceed 100.'],
+      max: [1000, 'Previous score cannot exceed 1000.'],
     },
    
     newScore: {
       type: Number,
       required: [true, 'New score is required.'],
       min: [0, 'New score cannot be negative.'],
-      max: [100, 'New score cannot exceed 100.'],
+      max: [1000, 'New score cannot exceed 1000.'],
     },
+
     
     delta: {
       type: Number,

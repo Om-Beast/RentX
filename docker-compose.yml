@@ -1,0 +1,34 @@
+services:
+  backend:
+    build: ./backend
+    container_name: rentx-backend
+    env_file:
+      - ./backend/.env
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongo
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+
+  frontend:
+    build: ./frontend
+    container_name: rentx-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:7
+    container_name: rentx-mongo
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - "27017:27017"
+    restart: unless-stopped
+
+volumes:
+  mongo_data:

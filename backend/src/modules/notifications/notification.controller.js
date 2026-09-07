@@ -11,8 +11,7 @@ const asyncHandler = (fn) => (req, res, next) => {
       });
     }
 
-   
-    console.error("[NotificationController] Unhandled error:", error);
+    // Pass to global error handler — no console.error in production
 
     return res.status(500).json({
       success : false,
