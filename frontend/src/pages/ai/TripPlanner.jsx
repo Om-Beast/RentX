@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import { api } from '../../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Sparkles, MapPin, Calendar, IndianRupee, Users, 

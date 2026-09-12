@@ -73,8 +73,6 @@ export const useCheckoutFlow = () => {
         order_id: orderId,
         handler: async (response) => {
 
-      console.log("RAZORPAY SUCCESS =", response);
-
       try {
         setCheckoutState('VERIFYING');
 
@@ -84,8 +82,6 @@ export const useCheckoutFlow = () => {
           razorpaySignature: response.razorpay_signature,
         });
 
-        console.log("VERIFY RESPONSE =", verifyRes);
-
         if (!verifyRes.data || !verifyRes.data.success) {
           throw new Error('Payment verification failed on the server.');
         }
@@ -94,8 +90,7 @@ export const useCheckoutFlow = () => {
         navigate(`/booking-success/${bookingId}`, { replace: true });
 
       } catch (verifyErr) {
-        console.error("VERIFY ERROR =", verifyErr);
-        setError('Payment verification failed.');
+        setError(verifyErr.response?.data?.error?.message || 'Payment verification failed. Please contact support.');
         setCheckoutState('ERROR');
       }
     },
@@ -107,24 +102,22 @@ export const useCheckoutFlow = () => {
           }
         },
         theme: {
-          color: '#3B82F6' // Standard Tailwind Blue-500
+          color: '#6366F1' // Indigo-500 — matches RentX brand
         }
       };
 
       const rzp = new window.Razorpay(options);
       
       rzp.on('payment.failed', function (response) {
-         console.log("PAYMENT FAILED =", response);
-        setError(`Payment Failed: ${response.error.description}`);
+        setError(`Payment failed: ${response.error.description}`);
         setCheckoutState('ERROR');
       });
 
       rzp.open();
 
     } catch (err) {
-      console.error('Checkout Flow Execution Error:', err);
-      // Fallback extraction checks if error came from Axios backend response or local Throw
-      setError(err.response?.data?.message || err.message || 'An unexpected error occurred during checkout.');
+      // Fallback extraction checks if error came from Axios backend response or local throw
+      setError(err.response?.data?.error?.message || err.response?.data?.message || err.message || 'An unexpected error occurred during checkout.');
       setCheckoutState('ERROR');
     }
   }, [checkoutState, navigate]);

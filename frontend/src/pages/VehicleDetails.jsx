@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 import {
   useParams,
   Link,
   useNavigate,
 } from "react-router-dom";
+import { api } from "../context/AuthContext";
+import { Car } from "lucide-react";
 
 export default function VehicleDetails() {
   const { id } = useParams();
@@ -12,20 +13,20 @@ export default function VehicleDetails() {
 
   const [vehicle, setVehicle] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState("");
 
   const [pickupDate, setPickupDate] = useState("");
   const [returnDate, setReturnDate] = useState("");
+  const [imgError, setImgError] = useState(false);
 
   useEffect(() => {
     const fetchVehicle = async () => {
       try {
-        const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/api/vehicles/${id}`
-        );
-
+        // Public endpoint — api instance still works (no auth required for GET)
+        const res = await api.get(`/api/vehicles/${id}`);
         setVehicle(res.data.vehicle);
-      } catch (error) {
-        console.log(error);
+      } catch (err) {
+        setFetchError(err.response?.data?.error?.message || "Vehicle not found.");
       } finally {
         setLoading(false);
       }
@@ -34,65 +35,31 @@ export default function VehicleDetails() {
     fetchVehicle();
   }, [id]);
 
-  const getVehicleImage = () => {
-    const name = vehicle?.name?.toLowerCase() || "";
-
-    if (name.includes("activa")) return "/vehicles/activa.png";
-    if (name.includes("classic")) return "/vehicles/Classic-350.png";
-    if (name.includes("thar")) return "/vehicles/thar.png";
-    if (name.includes("nexon")) return "/vehicles/nexon.png";
-    if (name.includes("creta")) return "/vehicles/creta.png";
-    if (name.includes("city")) return "/vehicles/city.png";
-    if (name.includes("scorpio")) return "/vehicles/scorpio.png";
-    if (name.includes("innova")) return "/vehicles/innova.png";
-    if (name.includes("ola")) return "/vehicles/ola.png";
-
-    return "/vehicles/activa.png";
-  };
-
   const today = new Date();
-  today.setMinutes(
-    today.getMinutes() -
-      today.getTimezoneOffset()
-  );
-
-  const minDate =
-    today.toISOString().split("T")[0];
+  today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
+  const minDate = today.toISOString().split("T")[0];
 
   const calculateDays = () => {
-    if (!pickupDate || !returnDate)
-      return 0;
-
+    if (!pickupDate || !returnDate) return 0;
     const start = new Date(pickupDate);
     const end = new Date(returnDate);
-
-    const diff =
-      (end - start) /
-      (1000 * 60 * 60 * 24);
-
+    const diff = (end - start) / (1000 * 60 * 60 * 24);
     return diff > 0 ? diff : 0;
   };
 
   const rentalDays = calculateDays();
 
-  const totalPrice =
-    rentalDays *
-    (vehicle?.rentPerDay || 0);
-
-  const gst = Math.round(
-    totalPrice * 0.18
-  );
-
+  // Frontend computes an estimate for display only.
+  // Backend always recomputes authoritatively on booking creation.
+  const pricePerDay = vehicle?.pricePerDay || 0;
+  const totalPrice = rentalDays * pricePerDay;
+  const gst = Math.round(totalPrice * 0.18);
   const platformFee = 99;
-  const securityDeposit = 1000;
+  const securityDeposit = vehicle?.securityDeposit ?? 1000;
+  const finalAmount = rentalDays > 0 ? totalPrice + gst + platformFee + securityDeposit : 0;
 
-  const finalAmount =
-    rentalDays > 0
-      ? totalPrice +
-        gst +
-        platformFee +
-        securityDeposit
-      : 0;
+  // Vehicle image: use first image from array, fall back to Car icon
+  const vehicleImageSrc = vehicle?.images?.[0] || null;
 
   if (loading) {
     return (
@@ -143,11 +110,18 @@ export default function VehicleDetails() {
             {/* IMAGE */}
             <div className="group relative overflow-hidden rounded-3xl p-[1px] bg-gradient-to-br from-indigo-500/40 via-white/10 to-purple-500/40 shadow-2xl shadow-black/40">
               <div className="relative overflow-hidden rounded-[calc(1.5rem-1px)] bg-white/5 backdrop-blur-xl">
-                <img
-                  src={getVehicleImage()}
-                  alt={vehicle.name}
-                  className="w-full h-56 sm:h-72 md:h-80 lg:h-[450px] object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
-                />
+                {vehicleImageSrc && !imgError ? (
+                  <img
+                    src={vehicleImageSrc}
+                    alt={vehicle.name}
+                    onError={() => setImgError(true)}
+                    className="w-full h-56 sm:h-72 md:h-80 lg:h-[450px] object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+                  />
+                ) : (
+                  <div className="w-full h-56 sm:h-72 md:h-80 lg:h-[450px] flex items-center justify-center bg-slate-800">
+                    <Car className="w-20 h-20 text-slate-600" />
+                  </div>
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
 
                 {/* Badges over image */}
@@ -168,7 +142,7 @@ export default function VehicleDetails() {
             <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
 
             <h2 className="text-yellow-400 text-2xl font-bold">
-            4.9★
+            {vehicle.rating > 0 ? `${vehicle.rating.toFixed(1)}★` : "—"}
             </h2>
 
             <p className="text-slate-400 text-xs">
@@ -180,11 +154,11 @@ export default function VehicleDetails() {
             <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
 
             <h2 className="text-cyan-300 text-2xl font-bold">
-            120+
+            {vehicle.reviewCount || 0}
             </h2>
 
             <p className="text-slate-400 text-xs">
-            Bookings
+            Reviews
             </p>
 
             </div>
@@ -239,7 +213,7 @@ export default function VehicleDetails() {
 
               <div className="mt-6 inline-flex items-baseline gap-2 px-5 py-3 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-lg">
                 <span className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-indigo-300 to-purple-300 bg-clip-text text-transparent">
-                  ₹{vehicle.rentPerDay}
+                  ₹{(vehicle.pricePerDay || 0).toLocaleString("en-IN")}
                 </span>
                 <span className="text-slate-400 text-base sm:text-lg">/ day</span>
               </div>

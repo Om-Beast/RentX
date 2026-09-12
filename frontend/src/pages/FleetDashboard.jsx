@@ -1,15 +1,9 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { motion } from "framer-motion";
 import AnalyticsDashboard from "../components/AnalyticsDashboard";
 import { Link } from "react-router-dom";
-
-import {
-  FaCar,
-  FaCalendarCheck,
-  FaMoneyBillWave,
-  FaClock,
-} from "react-icons/fa";;
+import { api } from "../context/AuthContext";
+import { Car, CalendarCheck, DollarSign, Clock } from "lucide-react";
 
 export default function FleetDashboard() {
  
@@ -21,13 +15,15 @@ export default function FleetDashboard() {
   });
 
   const [recentBookings, setRecentBookings] = useState([]);
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const statsRes = await axios.get(
-         `${import.meta.env.VITE_API_URL}/api/dashboard/stats`
-        );
+        const [statsRes, bookingsRes] = await Promise.all([
+          api.get("/api/dashboard/stats"),
+          api.get("/api/dashboard/recent-bookings"),
+        ]);
 
         setStats({
           totalVehicles: statsRes.data.totalVehicles || 0,
@@ -36,13 +32,9 @@ export default function FleetDashboard() {
           pendingBookings: statsRes.data.pendingBookings || 0,
         });
 
-        const bookingsRes = await axios.get(
-         `${import.meta.env.VITE_API_URL}/api/dashboard/recent-bookings`
-        );
-
         setRecentBookings(bookingsRes.data.bookings || []);
       } catch (error) {
-        console.log(error);
+        setLoadError(error.response?.data?.error?.message || "Failed to load dashboard data.");
       }
     };
 
@@ -135,8 +127,8 @@ export default function FleetDashboard() {
             className="group relative overflow-hidden rounded-3xl p-[1px] bg-gradient-to-br from-indigo-500/40 via-white/10 to-transparent shadow-xl shadow-black/30"
           >
             <div className="bg-white/5 backdrop-blur-xl rounded-[calc(1.5rem-1px)] p-5 sm:p-6 h-full">
-              <div className="w-11 h-11 rounded-2xl bg-indigo-500/15 flex items-center justify-center mb-4">
-                <FaCar className="text-xl text-indigo-300" />
+                <div className="w-11 h-11 rounded-2xl bg-indigo-500/15 flex items-center justify-center mb-4">
+                <Car className="w-5 h-5 text-indigo-300" />
               </div>
 
               <h3 className="text-slate-400 text-xs sm:text-sm uppercase tracking-wide">
@@ -155,7 +147,7 @@ export default function FleetDashboard() {
           >
             <div className="bg-white/5 backdrop-blur-xl rounded-[calc(1.5rem-1px)] p-5 sm:p-6 h-full">
               <div className="w-11 h-11 rounded-2xl bg-blue-500/15 flex items-center justify-center mb-4">
-                <FaCalendarCheck className="text-xl text-blue-300" />
+                <CalendarCheck className="w-5 h-5 text-blue-300" />
               </div>
 
               <h3 className="text-slate-400 text-xs sm:text-sm uppercase tracking-wide">
@@ -174,7 +166,7 @@ export default function FleetDashboard() {
           >
             <div className="bg-white/5 backdrop-blur-xl rounded-[calc(1.5rem-1px)] p-5 sm:p-6 h-full">
               <div className="w-11 h-11 rounded-2xl bg-emerald-500/15 flex items-center justify-center mb-4">
-                <FaMoneyBillWave className="text-xl text-emerald-300" />
+                <DollarSign className="w-5 h-5 text-emerald-300" />
               </div>
 
               <h3 className="text-slate-400 text-xs sm:text-sm uppercase tracking-wide">
@@ -182,7 +174,7 @@ export default function FleetDashboard() {
               </h3>
 
               <p className="text-3xl sm:text-4xl lg:text-5xl font-bold mt-3 bg-gradient-to-r from-emerald-300 to-emerald-400 bg-clip-text text-transparent">
-                ₹{stats.revenue}
+                ₹{(stats.revenue || 0).toLocaleString("en-IN")}
               </p>
               <p className="mt-2 text-xs text-emerald-300">
               ↑ Fleet earnings
@@ -196,7 +188,7 @@ export default function FleetDashboard() {
           >
             <div className="bg-white/5 backdrop-blur-xl rounded-[calc(1.5rem-1px)] p-5 sm:p-6 h-full">
               <div className="w-11 h-11 rounded-2xl bg-amber-500/15 flex items-center justify-center mb-4">
-                <FaClock className="text-xl text-amber-300" />
+                <Clock className="w-5 h-5 text-amber-300" />
               </div>
 
               <h3 className="text-slate-400 text-xs sm:text-sm uppercase tracking-wide">
@@ -206,6 +198,7 @@ export default function FleetDashboard() {
               <p className="text-3xl sm:text-4xl lg:text-5xl font-bold mt-3 text-amber-300">
                 {stats.pendingBookings}
               </p>
+
             </div>
           </motion.div>
 
@@ -356,7 +349,7 @@ export default function FleetDashboard() {
                     </div>
 
                     <div className="font-bold text-indigo-300 text-sm sm:text-base">
-                      ₹{booking.totalPrice}
+                      ₹{(booking.totalAmount || booking.pricing?.totalAmount || 0).toLocaleString("en-IN")}
                     </div>
 
                     <div>
