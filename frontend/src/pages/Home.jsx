@@ -89,7 +89,7 @@ export default function Home() {
         <div className="relative max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-medium mb-6">
             <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
-            Trusted by thousands of renters across India
+            India's smarter way to rent wheels
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-tight">
@@ -214,7 +214,8 @@ export default function Home() {
             <div className="rounded-[calc(1rem-1px)] bg-slate-900 p-8 sm:p-10">
               <h2 className="text-2xl font-bold text-white mb-3">Own a Vehicle? Earn with RentX</h2>
               <p className="text-slate-400 mb-6 text-sm leading-relaxed">
-                List your car, bike, or SUV and start earning. Reach thousands of verified renters.
+                List your car, bike, or SUV and start earning. Connect with renters on
+                the RentX marketplace.
                 Full control over availability and pricing.
               </p>
               <Link

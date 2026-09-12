@@ -15,6 +15,7 @@ import MyVehicles from "../pages/MyVehicles";
 import EditVehicle from "../pages/EditVehicle";
 import FleetBookingRequests from "../pages/FleetBookingRequests";
 import AiDiscover from "../pages/AiDiscover";
+import AdminDashboard from "../pages/AdminDashboard";
 
 /** Requires authentication. Redirects to /login if not logged in. */
 function ProtectedRoute({ children, allowedRoles }) {
@@ -67,6 +68,9 @@ export default function AppRoutes() {
       <Route path="/my-vehicles" element={<ProtectedRoute allowedRoles={["FLEET_OWNER", "ADMIN"]}><MyVehicles /></ProtectedRoute>} />
       <Route path="/edit-vehicle/:id" element={<ProtectedRoute allowedRoles={["FLEET_OWNER", "ADMIN"]}><EditVehicle /></ProtectedRoute>} />
       <Route path="/owner-bookings" element={<ProtectedRoute allowedRoles={["FLEET_OWNER", "ADMIN"]}><FleetBookingRequests /></ProtectedRoute>} />
+
+      {/* ── Admin routes ── */}
+      <Route path="/admin" element={<ProtectedRoute allowedRoles={["ADMIN"]}><AdminDashboard /></ProtectedRoute>} />
 
       {/* ── 404 ── */}
       <Route path="*" element={
