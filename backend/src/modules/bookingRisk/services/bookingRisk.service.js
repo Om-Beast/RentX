@@ -2,6 +2,7 @@ import bookingRiskRepository from "../repositories/bookingRisk.repository.js";
 import riskCalculator from "../utils/riskCalculator.js";
 import geminiService from "../../ai/gemini.service.js";
 import { buildBookingRiskPrompt } from "../prompts/bookingRisk.prompt.js";
+import logger from "../../../utils/logger.js";
 
 class BookingRiskService {
   async analyze(data) {
@@ -25,10 +26,7 @@ class BookingRiskService {
           prompt
         );
     } catch (error) {
-      console.error(
-        "[BookingRisk] Gemini Error:",
-        error.message
-      );
+      logger.error("BookingRisk", "GEMINI_AI_FAILED", { error: error.message });
     }
 
     // 4. Prepare Mongo document

@@ -6,8 +6,7 @@
 
 *Connecting fleet owners and customers through a secure, transaction-safe booking and payment platform.*
 
-[![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-000000?style=for-the-badge)](https://your-live-demo-url.vercel.app)
-[![Source Code](https://img.shields.io/badge/📂_Source_Code-181717?style=for-the-badge&logo=github)](https://github.com/your-username/rentx)
+[![Source Code](https://img.shields.io/badge/📂_GitHub-181717?style=for-the-badge&logo=github)](https://github.com/Om-Beast/RentX)
 
 ![React](https://img.shields.io/badge/React_19-61DAFB?style=flat-square&logo=react&logoColor=black)
 ![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat-square&logo=vite&logoColor=white)
@@ -16,10 +15,12 @@
 ![Express](https://img.shields.io/badge/Express.js-000000?style=flat-square&logo=express&logoColor=white)
 ![MongoDB](https://img.shields.io/badge/MongoDB_Atlas-47A248?style=flat-square&logo=mongodb&logoColor=white)
 ![Razorpay](https://img.shields.io/badge/Razorpay-0C2451?style=flat-square&logo=razorpay&logoColor=white)
+![Cloudinary](https://img.shields.io/badge/Cloudinary-3448C5?style=flat-square&logo=cloudinary&logoColor=white)
 ![JWT](https://img.shields.io/badge/JWT_Auth-black?style=flat-square&logo=jsonwebtokens&logoColor=white)
 
+![Tests](https://img.shields.io/badge/Tests-63_passing-brightgreen?style=flat-square)
+![npm audit](https://img.shields.io/badge/npm_audit-0_vulnerabilities-brightgreen?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
-![Status](https://img.shields.io/badge/status-active_development-brightgreen?style=flat-square)
 
 </div>
 
@@ -33,27 +34,15 @@ RentX is a full-stack vehicle rental platform built on the MERN stack, modeled a
 
 ## 📸 Screenshots
 
-<div align="center">
-
-| Home | Vehicle Listing | Vehicle Details |
-|:---:|:---:|:---:|
-| ![Home](https://via.placeholder.com/300x180?text=Home+Page) | ![Listing](https://via.placeholder.com/300x180?text=Vehicle+Listing) | ![Details](https://via.placeholder.com/300x180?text=Vehicle+Details) |
-
-| Checkout | Payment | Booking Success |
-|:---:|:---:|:---:|
-| ![Checkout](https://via.placeholder.com/300x180?text=Checkout) | ![Payment](https://via.placeholder.com/300x180?text=Razorpay+Payment) | ![Success](https://via.placeholder.com/300x180?text=Booking+Success) |
-
-| Fleet Dashboard | My Vehicles | Booking Requests |
-|:---:|:---:|:---:|
-| ![Fleet Dashboard](https://via.placeholder.com/300x180?text=Fleet+Dashboard) | ![My Vehicles](https://via.placeholder.com/300x180?text=My+Vehicles) | ![Requests](https://via.placeholder.com/300x180?text=Booking+Requests) |
-
-| Analytics |
-|:---:|
-| ![Analytics](https://via.placeholder.com/300x180?text=Analytics) |
-
-</div>
-
-> Replace the placeholder links above with real screenshots or GIFs before publishing — recruiters open the images before they open the code.
+> **Portfolio Setup:** Run `npm run seed:demo` to populate demo vehicles, then take screenshots of:
+> - Homepage with vehicle cards
+> - Search/listing page with filters active
+> - Vehicle details page (BMW 3 Series or Creta)
+> - Checkout page showing pricing breakdown
+> - Fleet Owner Dashboard with revenue stats
+> - Admin Console with analytics
+>
+> Replace this block with your actual screenshots. Recruiters open images before reading code.
 
 <br>
 
@@ -351,28 +340,41 @@ The app will be available at `http://localhost:5173`, with the API running at `h
 
 <br>
 
-## 🛣️ Future Roadmap
+## 🎭 Demo Accounts
 
-- [ ] Google OAuth login
-- [ ] Redis caching for high-traffic read endpoints
-- [ ] Email verification on signup
-- [ ] In-app and email notifications for booking status changes
-- [ ] AI-powered vehicle recommendations
-- [ ] Admin dashboard for platform-wide moderation
+After running `npm run seed:demo`:
+
+| Role | Email | Password |
+|------|-------|----------|
+| Customer | `demo.customer@rentx.com` | `DemoPass#2025` |
+| Fleet Owner | `demo.owner@rentx.com` | `DemoPass#2025` |
+| Admin | `demo.admin@rentx.com` | `DemoPass#2025` |
+
+> ⚠️ These are demonstration accounts only. Change all passwords before any production use.
 
 <br>
 
-## 🤝 Contributing
+## 🛣️ Honest Roadmap
 
-Contributions are welcome. Please open an issue to discuss significant changes before submitting a pull request.
+**Implemented (verified):**
+- ✅ Two-sided marketplace (Customer + Fleet Owner + Admin)
+- ✅ MongoDB transaction-based booking concurrency
+- ✅ Razorpay payments with HMAC + idempotency
+- ✅ Cloudinary image upload pipeline (with graceful degradation)
+- ✅ Admin console (users, vehicles, payments, analytics)
+- ✅ Trust/risk engine (deterministic, 0-1000)
+- ✅ AI: NL search, listing assistant, recommendations
+- ✅ Cancellation with tier-based refunds
+- ✅ Background jobs (hold expiry, reminders)
+- ✅ 63 integration tests (auth, concurrency, IDOR, RBAC)
+- ✅ 0 npm vulnerabilities
 
-```bash
-# Fork, then:
-git checkout -b feature/your-feature
-git commit -m "Add your feature"
-git push origin feature/your-feature
-# Open a Pull Request
-```
+**Future work:**
+- [ ] Google OAuth login
+- [ ] Redis caching for vehicle search (TTL-based)
+- [ ] Email notifications (SendGrid/Nodemailer)
+- [ ] Real-time notifications (Socket.io)
+- [ ] Review moderation queue in admin console
 
 <br>
 
@@ -384,13 +386,10 @@ This project is licensed under the [MIT License](LICENSE).
 
 ## 👤 Author
 
-**Your Name**
-
-[![GitHub](https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/your-username)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=flat-square&logo=linkedin&logoColor=white)](https://linkedin.com/in/your-profile)
+[![GitHub](https://img.shields.io/badge/GitHub-Om--Beast-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/Om-Beast)
 
 <div align="center">
 
-*Built as a demonstration of production-grade full-stack engineering — booking consistency, payment integrity, and role-based workflows over CRUD.*
+*Built as a demonstration of production-grade full-stack engineering — booking consistency under concurrency, payment integrity, role-based security, and bounded AI over a simple CRUD marketplace.*
 
 </div>
