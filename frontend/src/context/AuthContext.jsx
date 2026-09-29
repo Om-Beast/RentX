@@ -3,34 +3,60 @@ import axios from "axios";
 
 const AuthContext = createContext(null);
 
-// Production-safe API resolution:
-// - Prefer VITE_API_URL when configured by the deployment platform.
-// - When hosted on Vercel, fall back to the live Render API so a missing
-//   build-time variable cannot silently point the browser at localhost.
-// - Keep localhost as the local-development fallback.
-const API_URL = import.meta.env.VITE_API_URL ||
-  (typeof window !== "undefined" && window.location.hostname.endsWith(".vercel.app")
-    ? "https://rent-x-1-ltjq.onrender.com"
-    : "http://localhost:5000");
+/**
+ * Axios instance with empty baseURL so all API calls use relative paths.
+ *
+ * In production (Vercel): /api/* → Vercel proxy → https://rentx-1-ltjq.onrender.com/api/*
+ * In development (Vite):  /api/* → Vite dev proxy → http://localhost:5000/api/*
+ *
+ * Benefits:
+ * - No VITE_API_URL env var required on Vercel dashboard
+ * - No CORS issues (same-origin from browser perspective)
+ * - No localhost baked into production bundle
+ * - Dev and production behave identically
+ */
+export const api = axios.create({
+  baseURL: "",
+  timeout: 15000,
+});
 
-// Axios instance with base URL
-export const api = axios.create({ baseURL: API_URL });
+// Normalize server error shape { error: { message } } → err.message for cleaner catch blocks
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.data?.error?.message) {
+      error.message = error.response.data.error.message;
+    }
+    return Promise.reject(error);
+  }
+);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Attach Authorization header to every request when token is set
+  // Attach Authorization header + auto-clear stale token on 401
   useEffect(() => {
-    const interceptor = api.interceptors.request.use((config) => {
+    const reqId = api.interceptors.request.use((config) => {
       const storedToken = localStorage.getItem("rentx_token");
-      if (storedToken) {
-        config.headers.Authorization = `Bearer ${storedToken}`;
-      }
+      if (storedToken) config.headers.Authorization = `Bearer ${storedToken}`;
       return config;
     });
-    return () => api.interceptors.request.eject(interceptor);
+    const resId = api.interceptors.response.use(
+      (r) => r,
+      (err) => {
+        if (err.response?.status === 401) {
+          localStorage.removeItem("rentx_token");
+          localStorage.removeItem("rentx_user");
+        }
+        return Promise.reject(err);
+      }
+    );
+    return () => {
+      api.interceptors.request.eject(reqId);
+      api.interceptors.response.eject(resId);
+    };
   }, []);
 
   // Restore session from localStorage on app load

@@ -23,32 +23,55 @@ import notificationRoutes from "./modules/notifications/notification.routes.js";
 import aiRoutes from "./modules/ai/ai.routes.js";
 import reviewRoutes from "./modules/reviews/review.routes.js";
 import adminRoutes from "./modules/admin/admin.routes.js";
-import { getAllVehicles } from "./modules/vehicles/vehicle.controller.js";
 
 const app = express();
 
-// Render terminates TLS and forwards X-Forwarded-For.
-// Trust the single proxy hop so express-rate-limit can safely resolve client IPs.
+// ─── Trust Proxy ──────────────────────────────────────────────────────────────
+// Render.com sits behind a load balancer that adds X-Forwarded-For headers.
+// Without trust proxy, express-rate-limit sees the proxy IP for every request
+// and throws ERR_ERL_UNEXPECTED_X_FORWARDED_FOR. Setting "1" trusts only the
+// first proxy hop (Render's load balancer), not arbitrary client-supplied headers.
 app.set("trust proxy", 1);
 
-// ─── Core Middleware ──────────────────────────────────────────────────────────
-app.use(requestId);
+// ─── CORS ─────────────────────────────────────────────────────────────────────
+// Function-based origin supports multiple origins without wildcards (required
+// for credentials: true). Supports Vercel production, local dev, and env override.
+const ALLOWED_ORIGINS = new Set([
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "https://rent-x-sd4b.vercel.app",
+]);
+if (process.env.FRONTEND_URL) {
+  ALLOWED_ORIGINS.add(process.env.FRONTEND_URL);
+}
 
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: (origin, callback) => {
+      // Allow requests with no origin (curl, Postman, server-to-server)
+      if (!origin) return callback(null, true);
+      if (ALLOWED_ORIGINS.has(origin)) return callback(null, true);
+      // In non-production, allow any localhost port for developer convenience
+      if (process.env.NODE_ENV !== "production" && /^http:\/\/localhost:\d+$/.test(origin)) {
+        return callback(null, true);
+      }
+      callback(new Error(`CORS: origin '${origin}' not allowed`));
+    },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "x-idempotency-key", "x-request-id"],
     credentials: true,
   })
 );
 
+// ─── Core Middleware ──────────────────────────────────────────────────────────
+app.use(requestId);
+
 // Webhook route MUST use raw body BEFORE express.json() strips it
 app.use("/api/payments/webhook", express.raw({ type: "application/json" }));
 
 app.use(express.json({ limit: "10mb" }));
 
-// General rate limiter
+// General rate limiter on all /api/* routes
 app.use("/api", generalLimiter);
 
 // ─── Root Route ───────────────────────────────────────────────────────────────
@@ -62,26 +85,6 @@ app.get("/", (_req, res) => {
     health: "/health",
     apiBase: "/api",
     docs: "https://github.com/Om-Beast/RentX",
-  });
-});
-
-// ─── API Catalog ──────────────────────────────────────────────────────────────
-app.get("/api", (_req, res) => {
-  res.json({
-    success: true,
-    service: "RentX API",
-    version: "1.0.0",
-    endpoints: {
-      auth: "/api/auth",
-      vehicles: "/api/vehicles",
-      bookings: "/api/bookings",
-      payments: "/api/payments",
-      dashboard: "/api/dashboard",
-      notifications: "/api/notifications",
-      ai: "/api/ai",
-      reviews: "/api/reviews",
-      admin: "/api/admin",
-    },
   });
 });
 
@@ -107,10 +110,6 @@ app.get("/health", (_req, res) => {
 
 // ─── API Routes ───────────────────────────────────────────────────────────────
 app.use("/api/auth", authRoutes);
-
-// Explicit public listing endpoint keeps the production contract unambiguous.
-// The same handler is also mounted below for the remaining vehicle routes.
-app.get("/api/vehicles", getAllVehicles);
 app.use("/api/vehicles", vehicleRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/dashboard", dashboardRoutes);
@@ -119,6 +118,26 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/admin", adminRoutes);
+
+// ─── API Catalog (after route mounts) ────────────────────────────────────────
+app.get("/api", (_req, res) => {
+  res.json({
+    success: true,
+    service: "RentX API",
+    version: "1.0.0",
+    endpoints: {
+      auth: "/api/auth",
+      vehicles: "/api/vehicles",
+      bookings: "/api/bookings",
+      payments: "/api/payments",
+      dashboard: "/api/dashboard",
+      notifications: "/api/notifications",
+      ai: "/api/ai",
+      reviews: "/api/reviews",
+      admin: "/api/admin",
+    },
+  });
+});
 
 // ─── 404 Handler ──────────────────────────────────────────────────────────────
 app.use((req, res) => {
