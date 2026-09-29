@@ -23,8 +23,13 @@ import notificationRoutes from "./modules/notifications/notification.routes.js";
 import aiRoutes from "./modules/ai/ai.routes.js";
 import reviewRoutes from "./modules/reviews/review.routes.js";
 import adminRoutes from "./modules/admin/admin.routes.js";
+import { getAllVehicles } from "./modules/vehicles/vehicle.controller.js";
 
 const app = express();
+
+// Render terminates TLS and forwards X-Forwarded-For.
+// Trust the single proxy hop so express-rate-limit can safely resolve client IPs.
+app.set("trust proxy", 1);
 
 // ─── Core Middleware ──────────────────────────────────────────────────────────
 app.use(requestId);
@@ -102,6 +107,10 @@ app.get("/health", (_req, res) => {
 
 // ─── API Routes ───────────────────────────────────────────────────────────────
 app.use("/api/auth", authRoutes);
+
+// Explicit public listing endpoint keeps the production contract unambiguous.
+// The same handler is also mounted below for the remaining vehicle routes.
+app.get("/api/vehicles", getAllVehicles);
 app.use("/api/vehicles", vehicleRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/dashboard", dashboardRoutes);
