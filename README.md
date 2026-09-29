@@ -7,6 +7,7 @@
 *A two-sided rental marketplace with transaction-safe bookings, HMAC-verified payments, and role-based access control — built to demonstrate serious full-stack engineering.*
 
 [![GitHub](https://img.shields.io/badge/📂_Source_Code-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Om-Beast/RentX)
+[![Frontend](https://img.shields.io/badge/🌐_Live_Frontend-Vercel-000000?style=for-the-badge&logo=vercel)](https://rent-x-sd4b.vercel.app)
 [![Backend API](https://img.shields.io/badge/🚀_Backend_API-Render-46E3B7?style=for-the-badge)](https://rentx-1-ltjq.onrender.com)
 
 ![React](https://img.shields.io/badge/React_19-61DAFB?style=flat-square&logo=react&logoColor=black)
