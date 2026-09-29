@@ -3,7 +3,15 @@ import axios from "axios";
 
 const AuthContext = createContext(null);
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+// Production-safe API resolution:
+// - Prefer VITE_API_URL when configured by the deployment platform.
+// - When hosted on Vercel, fall back to the live Render API so a missing
+//   build-time variable cannot silently point the browser at localhost.
+// - Keep localhost as the local-development fallback.
+const API_URL = import.meta.env.VITE_API_URL ||
+  (typeof window !== "undefined" && window.location.hostname.endsWith(".vercel.app")
+    ? "https://rent-x-1-ltjq.onrender.com"
+    : "http://localhost:5000");
 
 // Axios instance with base URL
 export const api = axios.create({ baseURL: API_URL });
