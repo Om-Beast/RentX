@@ -8,14 +8,8 @@ on:
 
 jobs:
   backend:
-    name: Backend — Lint & Test
+    name: Backend — Test & Audit
     runs-on: ubuntu-latest
-
-    services:
-      mongodb:
-        image: mongo:7
-        ports:
-          - 27017:27017
 
     steps:
       - name: Checkout code
@@ -37,14 +31,20 @@ jobs:
         env:
           NODE_ENV: test
           PORT: 5001
-          MONGO_URI: mongodb://localhost:27017/rentx_test
-          JWT_SECRET: test_secret_key_for_ci_only_not_real
+          # MONGO_URI is overridden by tests/setup.js (MongoMemoryReplSet)
+          # Setting a placeholder to satisfy any env checks before override
+          MONGO_URI: mongodb://localhost:27017/rentx_test_placeholder
+          JWT_SECRET: test_secret_key_for_ci_only_not_real_minimum_64_chars_rentx_portfolio_2025
           RAZORPAY_KEY_ID: rzp_test_dummy
-          RAZORPAY_KEY_SECRET: dummy_secret
-          RAZORPAY_WEBHOOK_SECRET: dummy_webhook
+          RAZORPAY_KEY_SECRET: dummy_razorpay_secret_32chars_ok_
+          RAZORPAY_WEBHOOK_SECRET: dummy_webhook_secret_32chars_ok__
           GEMINI_API_KEY: dummy_gemini_key
           FRONTEND_URL: http://localhost:5173
         run: npm test
+
+      - name: Security audit
+        working-directory: backend
+        run: npm audit --audit-level=high
 
   frontend:
     name: Frontend — Build Check
@@ -68,6 +68,6 @@ jobs:
       - name: Build frontend
         working-directory: frontend
         env:
-          VITE_API_URL: http://localhost:5000
+          VITE_API_URL: https://rentx-1-ltjq.onrender.com
           VITE_RAZORPAY_KEY_ID: rzp_test_dummy
         run: npm run build

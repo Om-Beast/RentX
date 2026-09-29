@@ -46,12 +46,53 @@ app.use(express.json({ limit: "10mb" }));
 // General rate limiter
 app.use("/api", generalLimiter);
 
+// ─── Root Route ───────────────────────────────────────────────────────────────
+app.get("/", (_req, res) => {
+  res.json({
+    success: true,
+    service: "RentX API",
+    version: "1.0.0",
+    status: "ok",
+    description: "Vehicle rental marketplace backend",
+    health: "/health",
+    apiBase: "/api",
+    docs: "https://github.com/Om-Beast/RentX",
+  });
+});
+
+// ─── API Catalog ──────────────────────────────────────────────────────────────
+app.get("/api", (_req, res) => {
+  res.json({
+    success: true,
+    service: "RentX API",
+    version: "1.0.0",
+    endpoints: {
+      auth: "/api/auth",
+      vehicles: "/api/vehicles",
+      bookings: "/api/bookings",
+      payments: "/api/payments",
+      dashboard: "/api/dashboard",
+      notifications: "/api/notifications",
+      ai: "/api/ai",
+      reviews: "/api/reviews",
+      admin: "/api/admin",
+    },
+  });
+});
+
 // ─── Health Check ─────────────────────────────────────────────────────────────
-app.get("/health", (req, res) => {
+app.get("/health", (_req, res) => {
   const dbState = mongoose.connection.readyState;
-  const dbStatus = dbState === 1 ? "connected" : dbState === 2 ? "connecting" : "disconnected";
-  res.status(dbStatus === "connected" ? 200 : 503).json({
-    status: dbStatus === "connected" ? "ok" : "degraded",
+  const dbStatus =
+    dbState === 1 ? "connected" :
+    dbState === 2 ? "connecting" :
+    dbState === 3 ? "disconnecting" : "disconnected";
+  const isHealthy = dbStatus === "connected";
+  res.status(isHealthy ? 200 : 503).json({
+    success: isHealthy,
+    service: "RentX API",
+    version: "1.0.0",
+    status: isHealthy ? "ok" : "degraded",
     timestamp: new Date().toISOString(),
     uptime: Math.floor(process.uptime()),
     database: dbStatus,

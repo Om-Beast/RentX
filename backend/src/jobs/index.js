@@ -126,14 +126,29 @@ const sendReminders = async () => {
  * Start all background jobs.
  * Called once from server.js after DB connection is established.
  */
+const _runningTasks = [];
+
 export const startJobs = () => {
   // Expire stale holds every 5 minutes
-  cron.schedule("*/5 * * * *", expireStaleHolds);
-
+  const t1 = cron.schedule("*/5 * * * *", expireStaleHolds);
   // Send reminders every day at 8:00 AM
-  cron.schedule("0 8 * * *", sendReminders);
+  const t2 = cron.schedule("0 8 * * *", sendReminders);
+
+  _runningTasks.push(t1, t2);
 
   logger.info("Jobs", "JOBS_STARTED", {
     jobs: ["expireStaleHolds (every 5min)", "sendReminders (daily 8am)"],
   });
+};
+
+/**
+ * Stop all background jobs.
+ * Called during graceful shutdown from server.js.
+ */
+export const stopJobs = () => {
+  for (const task of _runningTasks) {
+    try { task.stop(); } catch (_) { /* continue */ }
+  }
+  _runningTasks.length = 0;
+  logger.info("Jobs", "JOBS_STOPPED");
 };

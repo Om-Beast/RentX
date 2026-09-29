@@ -164,8 +164,8 @@ export const uploadVehicleImages = async (req, res, next) => {
       );
     }
 
-    // Phase 2: run multer (dynamic per ownerId for folder organisation)
-    const uploadMiddleware = createVehicleUploadMiddleware(req.user._id.toString());
+    // Phase 2: run multer (scoped to this specific vehicleId for Cloudinary folder)
+    const uploadMiddleware = createVehicleUploadMiddleware(req.params.id);
     const multerFields = uploadMiddleware.array("images", MAX_IMAGES - currentCount);
 
     await new Promise((resolve, reject) => {

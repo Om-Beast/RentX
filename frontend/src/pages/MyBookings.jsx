@@ -63,16 +63,20 @@ function VehicleImage({ images, name }) {
 function BookingCard({ booking, onCancel }) {
   const v = booking.vehicle;
   const canCancel = ["pending_payment", "pending_owner_approval", "confirmed"].includes(booking.bookingStatus);
+  const [confirmCancel, setConfirmCancel] = useState(false);
   const [cancelling, setCancelling] = useState(false);
 
-  const handleCancel = async () => {
-    if (!window.confirm || !window.confirm("Cancel this booking? This action cannot be undone.")) {
-      // For accessibility — use inline confirm
-      if (!cancelling) {
-        setCancelling(true);
-        return;
-      }
+  const handleCancelClick = () => {
+    if (!confirmCancel) {
+      setConfirmCancel(true);
+      return;
     }
+    setConfirmCancel(false);
+    handleConfirmedCancel();
+  };
+
+  const handleConfirmedCancel = async () => {
+    setCancelling(true);
     try {
       await onCancel(booking._id);
     } finally {
@@ -140,11 +144,15 @@ function BookingCard({ booking, onCancel }) {
               )}
               {canCancel && (
                 <button
-                  onClick={handleCancel}
+                  onClick={handleCancelClick}
                   disabled={cancelling}
-                  className="px-3 py-1.5 rounded-lg border border-red-500/30 text-xs text-red-400 hover:bg-red-500/10 transition disabled:opacity-50"
+                  className={`px-3 py-1.5 rounded-lg border text-xs transition disabled:opacity-50 ${
+                    confirmCancel
+                      ? "border-red-500/60 bg-red-500/15 text-red-300 font-semibold"
+                      : "border-red-500/30 text-red-400 hover:bg-red-500/10"
+                  }`}
                 >
-                  {cancelling ? "Confirm cancel?" : "Cancel"}
+                  {cancelling ? "Cancelling…" : confirmCancel ? "Confirm cancel?" : "Cancel"}
                 </button>
               )}
             </div>
