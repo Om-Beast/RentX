@@ -1,4 +1,4 @@
-﻿# RentX — Interview Guide
+# RentX — Interview Guide
 
 All answers reflect **actually implemented and tested** functionality.
 
@@ -62,10 +62,23 @@ Cloudinary handles vehicle images with MIME validation, size limits, and ownersh
 - AI timeout/error -> graceful fallback, marketplace unaffected
 
 ### Cloudinary Pipeline
-- multer-storage-cloudinary streams memory -> CDN (no local disk)
-- Ownership check BEFORE multer processes files
+- Custom `CloudinaryStreamStorage` multer engine — streams buffer → Cloudinary via `upload_stream()` (no disk write)
+- Removed `multer-storage-cloudinary` (required cloudinary@1, conflicts with cloudinary@2) — built own engine
+- Ownership check BEFORE multer processes files (prevents unauthorized Cloudinary bandwidth usage)
 - MIME validation + extension validation + 5MB limit + 10 files max
-- Graceful degradation when CLOUDINARY_* env vars not set
+- Folder scoped to `vehicleId` (not `ownerId`) — deleting one vehicle can't touch another's images
+- Graceful degradation when CLOUDINARY_* env vars not set — marketplace works with URL-based images
+
+### Graceful Shutdown
+- `server.js` handles SIGTERM and SIGINT (used by Render, Docker, Kubernetes)
+- On signal: stop accepting new connections → stop cron jobs → close MongoDB connection → exit(0)
+- Force exit after 10s if graceful shutdown hangs (safety net)
+- `jobs/index.js` exports `stopJobs()` — cron task references are stored and explicitly stopped
+
+### CI/CD
+- GitHub Actions: backend `npm ci` + `npm test` + `npm audit --audit-level=high`, then frontend `npm ci` + `npm run build`
+- No external services needed in CI — tests use `MongoMemoryReplSet` (single-node replica set)
+- Render auto-deploy on push to `main`. Health check: `GET /health` → 200 when DB connected.
 
 ---
 
