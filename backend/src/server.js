@@ -9,6 +9,7 @@ import connectDB from "./config/db.js";
 import app from "./app.js";
 import logger from "./utils/logger.js";
 import { startJobs, stopJobs } from "./jobs/index.js";
+import { runDemoImageMigration } from "./jobs/migrateDemoImages.js";
 
 // 1. Connect to database (exits with code 1 on failure)
 await connectDB();
@@ -19,6 +20,17 @@ const server = app.listen(PORT, () => {
   logger.info("Server", "SERVER_STARTED", { port: PORT, env: process.env.NODE_ENV || "development" });
   // 3. Start background jobs after server is ready
   startJobs();
+
+  // 4. One-time demo image migration — ONLY when explicitly requested.
+  //    Set RUN_DEMO_IMAGE_MIGRATION=true in Render env vars, restart once.
+  //    After logs show "DEMO_IMAGE_MIGRATION_COMPLETE", remove the variable.
+  if (process.env.RUN_DEMO_IMAGE_MIGRATION === "true") {
+    logger.info("Server", "DEMO_MIGRATION_TRIGGERED", {
+      message: "RUN_DEMO_IMAGE_MIGRATION=true detected. Starting async migration...",
+    });
+    // Fire-and-forget: never blocks startup, never crashes server
+    setImmediate(() => runDemoImageMigration());
+  }
 });
 
 // ─── Graceful Shutdown ────────────────────────────────────────────────────────
